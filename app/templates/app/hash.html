@@ -1,0 +1,11 @@
+{% extends "app/base.html" %}
+{% block content %}
+<head>
+    <title>Hash</title>
+</head>
+<form action="/hash/" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>
+{%endblock%}

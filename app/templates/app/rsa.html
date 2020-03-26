@@ -1,0 +1,14 @@
+{% extends "app/base.html" %}
+{% block content %}
+<head>
+    <title>RSA</title>
+</head>
+<form action="/rsa-gen/private/" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Generate RSA Private Key">
+</form>
+<form action="/rsa-gen/private/" method="get">
+    {% csrf_token %}
+    <input type="submit" value="Get RSA Keys">
+</form>
+{%endblock%}
