@@ -1,14 +1,24 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
-from django.core import serializers
-from cryptoapp.forms import *
-from app.models import *
-from django.views.generic.edit import FormView
-from django.views.generic import TemplateView
-from django.contrib.auth.forms import UserCreationForm
 import json
+
 from Crypto.Hash import MD5
 from Crypto.PublicKey import RSA
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.core import serializers
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.generic import TemplateView
+from django.views.generic.edit import FormView
+from rest_framework import viewsets
+
+from app.models import *
+from cryptoapp.forms import *
+from cryptoapp.serializers import *
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class CreateUserView(FormView):
     template_name = 'registration/signup.html' 
@@ -34,84 +44,53 @@ class HashForm(FormView):
         hash_out = self.get_hash(hash_in)
         return HttpResponse(hash_out)
 
-# keygen stuff
-class RSAKeyGen(TemplateView):
+class PrivateKeyViewset(viewsets.ModelViewSet):
+    serializer_class = PrivateKeySerializer
 
-    # pass single RSAKey object for json serialization
-    def serializeObj(self, keys):
-        if not hasattr(keys, '__len__'):
-            serialized = serializers.serialize("json", [keys])
-            data = dict({'keys': serialized})
-            return data
-        if len(keys) == 0:
-            data = dict({'keys': 'no keys yet'})
-            return data
-        else:
-            data = {}
-            for key in keys:
-                serialized = serializers.serialize("json", [key])
-                data[key.pk] = key.content
-            return data
+    def get_queryset(self):
+        return PrivateKey.objects.filter(owner=self.request.user)
 
     def private_gen(self, request):
         key = RSA.generate(2048) # 2048 is secure enough for modern standards
-        key_out = PrivateKey.objects.create(
-            content=key.export_key('PEM'),
-            owner=self.request.user,
+        return key.export_key('PEM')
+
+    def create(self, request):
+        key = self.private_gen(request)
+        private_key_serializer = self.get_serializer_class()
+        serialized = private_key_serializer(
+            data={
+                'content': key,
+                'owner': request.user,
+            }
         )
-        return key_out
+        serialized.save()
+        return JsonResponse(serialized.data, status=201)
 
-    def public_gen(self, request, private_key_obj):
-        rsa_key = RSA.import_key(private_key_obj.content)
-        public_key = rsa_key.publickey()
-        key_out = PublicKey.objects.create(
-            private_key = private_key_obj,
-            owner=request.user,
-            content=public_key,
+class PublicKeyViewset(viewsets.ModelViewSet):
+    serializer_class = PublicKeySerializer
+
+    def get_queryset(self):
+        return PublicKey.objects.filter(owner=self.request.user)
+
+    def public_gen(self, private_key):
+        rsa_key = RSA.import_key(private_key)
+        return rsa_key.publickey()
+
+    def create(self, request, pk=None):
+        # get private key to create this public key for
+        # by its pk in the database
+        private_key = get_object_or_404(
+            PrivateKey.objects.get(owner=request.user),
+            pk=pk
         )
-        return key_out
-
-    def post(self, request, type=None, pk=None):
-        if type == 'private':
-            key = self.private_gen(request)
-            return JsonResponse(self.serializeObj(key), status=201)
-
-        # need to specify which public key to gen for
-        elif type == 'public':
-            private_key = PrivateKey.objects.get(pk=pk)
-            key = self.public_gen(request, private_key)
-            return JsonResponse(self.serializeObj(key), status=201)
-
-    def get_pks(self, request):
-        q = PrivateKey.objects.filter(owner=request.user)
-        pks = []
-        for o in q:
-            pks.append(o.pk)
-        return JsonResponse({
-            'pks': pks
-        })
-
-    def get(self, request, type=None, pk=None):
-        if type ==  'private':
-            q = PrivateKey.objects.filter(owner=request.user)
-            if pk:
-                q = PrivateKey.objects.get(pk=pk)
-            serialized = self.serializeObj(q)
-            return JsonResponse(serialized)
-
-        elif type == 'public':
-            q = PublicKey.objects.filter(owner=request.user)
-            if pk:
-                private_key = PrivateKey.objects.get(pk=pk)
-                q = PublicKey.objects.filter(private_key=private_key)
-            serialized = self.serializeObj(q)
-            return JsonResponse(serialized)
-
-class RSAForm(FormView):
-    template_name = 'app/rsa.html'
-    form_class = RSAForm
-
-    # called on posting of valid data
-    def form_valid(self, form):
-        pass
-
+        public_key = self.public_gen(private_key.content)
+        public_key_serializer = self.get_serializer_class()
+        serialized = public_key_serializer(
+            data={
+                'content': public_key,
+                'owner': request.user,
+                'private_key': private_key,
+            }
+        )
+        serialized.save()
+        return JsonResponse(serialized.data, status=201)

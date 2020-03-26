@@ -5,27 +5,36 @@
 </head>
 
 <h2>Private Keys</h2>
-<form action="/rsa-gen/private/" method="post">
+<form action="/private-key/" method="post">
     {% csrf_token %}
     <label for="gen-priv">Generate a new RSA private key</label>
     <input id="gen-priv" type="submit" value="Generate">
 </form>
-<form action="/rsa-gen/private/" method="get">
+<form action="/private-key/" method="get">
     {% csrf_token %}
     <label for="get-priv">Get all Private Keys from the Database</label>
     <input id="get-priv" type="submit" value="Get">
 </form>
 
 <h2>Public Keys</h2>
-<form action="/rsa-gen/private/" method="post">
+<form id="public_key_form" action="/public-key/" method="post">
     {% csrf_token %}
     <label for="gen-priv">Generate a new RSA private key</label>
     <input id="gen-priv" type="submit" value="Generate">
 </form>
-<form action="/rsa-gen/private/" method="get">
+<form action="/public-key/" method="get">
     {% csrf_token %}
     <label for="get-priv">Get all Private Keys from the Database</label>
     <input id="get-priv" type="submit" value="Get">
 </form>
+
+<script>
+    $(document).ready(
+        $.ajax({
+            url: '/'
+        })
+    );
+</script>
+
 
 {%endblock%}

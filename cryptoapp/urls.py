@@ -15,17 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
 from django.views.generic import TemplateView
 from app.views import *
 
+router = routers.DefaultRouter()
+router.register(r'user', UserViewSet, basename="user")
+router.register(r'private-key', PrivateKeyViewset, basename="privatekey")
+router.register(r'public-key', PublicKeyViewset, basename="publickey")
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', include(router.urls)),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('', HashForm.as_view()),
     path('signup/', CreateUserView.as_view()),
     path('hash/', HashForm.as_view()),
-    path('rsa/', RSAForm.as_view()),
-    path('rsa/', RSAKeyGen.as_view()),
-    path('rsa-gen/<str:type>/', RSAKeyGen.as_view()),
-    path('rsa-gen/<str:type>/<int:pk>/', RSAKeyGen.as_view()),
+    path('rsa/', TemplateView.as_view(template_name="app/rsa.html")),
 ]
