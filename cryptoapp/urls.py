@@ -25,6 +25,7 @@ urlpatterns = [
     path('signup/', CreateUserView.as_view()),
     path('hash/', HashForm.as_view()),
     path('rsa/', RSAForm.as_view()),
+    path('rsa/', RSAKeyGen.as_view()),
     path('rsa-gen/<str:type>/', RSAKeyGen.as_view()),
     path('rsa-gen/<str:type>/<int:pk>/', RSAKeyGen.as_view()),
 ]

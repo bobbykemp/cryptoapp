@@ -3,12 +3,29 @@
 <head>
     <title>RSA</title>
 </head>
+
+<h2>Private Keys</h2>
 <form action="/rsa-gen/private/" method="post">
     {% csrf_token %}
-    <input type="submit" value="Generate RSA Private Key">
+    <label for="gen-priv">Generate a new RSA private key</label>
+    <input id="gen-priv" type="submit" value="Generate">
 </form>
 <form action="/rsa-gen/private/" method="get">
     {% csrf_token %}
-    <input type="submit" value="Get RSA Keys">
+    <label for="get-priv">Get all Private Keys from the Database</label>
+    <input id="get-priv" type="submit" value="Get">
 </form>
+
+<h2>Public Keys</h2>
+<form action="/rsa-gen/private/" method="post">
+    {% csrf_token %}
+    <label for="gen-priv">Generate a new RSA private key</label>
+    <input id="gen-priv" type="submit" value="Generate">
+</form>
+<form action="/rsa-gen/private/" method="get">
+    {% csrf_token %}
+    <label for="get-priv">Get all Private Keys from the Database</label>
+    <input id="get-priv" type="submit" value="Get">
+</form>
+
 {%endblock%}

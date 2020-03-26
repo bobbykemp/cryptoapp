@@ -82,6 +82,15 @@ class RSAKeyGen(TemplateView):
             key = self.public_gen(request, private_key)
             return JsonResponse(self.serializeObj(key), status=201)
 
+    def get_pks(self, request):
+        q = PrivateKey.objects.filter(owner=request.user)
+        pks = []
+        for o in q:
+            pks.append(o.pk)
+        return JsonResponse({
+            'pks': pks
+        })
+
     def get(self, request, type=None, pk=None):
         if type ==  'private':
             q = PrivateKey.objects.filter(owner=request.user)
