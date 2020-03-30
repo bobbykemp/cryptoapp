@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from app.models import *
 from cryptoapp.forms import *
@@ -53,6 +54,13 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
     def private_gen(self, request):
         key = RSA.generate(2048) # 2048 is secure enough for modern standards
         return key.export_key('PEM')
+
+    @action(detail=True, methods=['get'])
+    def get_public_keys(self, request, pk=None):
+        private_key = get_object_or_404(PrivateKey, pk=pk)
+        queryset = PublicKey.objects.filter(private_key=private_key.pk)
+        serializer = PublicKeySerializer(queryset, many=True)
+        return JsonResponse(serializer.data, status=200)
 
     def create(self, request):
         key = self.private_gen(request)
