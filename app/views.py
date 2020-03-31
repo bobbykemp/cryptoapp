@@ -50,47 +50,8 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         return PrivateKey.objects.filter(owner=self.request.user)
 
-    def private_gen(self, request):
-        key = RSA.generate(2048) # 2048 is secure enough for modern standards
-        return key.export_key('PEM')
-
-    def create(self, request):
-        key = self.private_gen(request)
-        private_key_serializer = self.get_serializer_class()
-        serialized = private_key_serializer(
-            data={
-                'content': key,
-                'owner': request.user,
-            }
-        )
-        serialized.save()
-        return JsonResponse(serialized.data, status=201)
-
 class PublicKeyViewset(viewsets.ModelViewSet):
     serializer_class = PublicKeySerializer
 
     def get_queryset(self):
         return PublicKey.objects.filter(owner=self.request.user)
-
-    def public_gen(self, private_key):
-        rsa_key = RSA.import_key(private_key)
-        return rsa_key.publickey()
-
-    def create(self, request, pk=None):
-        # get private key to create this public key for
-        # by its pk in the database
-        private_key = get_object_or_404(
-            PrivateKey.objects.get(owner=request.user),
-            pk=pk
-        )
-        public_key = self.public_gen(private_key.content)
-        public_key_serializer = self.get_serializer_class()
-        serialized = public_key_serializer(
-            data={
-                'content': public_key,
-                'owner': request.user,
-                'private_key': private_key,
-            }
-        )
-        serialized.save()
-        return JsonResponse(serialized.data, status=201)
