@@ -22,6 +22,7 @@ from app.views import *
 router = routers.DefaultRouter()
 router.register(r'user', UserViewSet, basename="user")
 router.register(r'private-key', PrivateKeyViewset, basename="privatekey")
+router.register(r'message', MessageViewSet, basename="message")
 
 urlpatterns = [
     path('', include(router.urls)),

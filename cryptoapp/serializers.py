@@ -5,10 +5,6 @@ from rest_framework import serializers
 from app.models import *
 
 
-class ReadOnlyOwnerSerializer(serializers.HyperlinkedModelSerializer):
-    # owner = serializers.ReadOnlyField()
-    pass
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
@@ -17,12 +13,18 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'username',
         ]
 
-class HashSerializer(ReadOnlyOwnerSerializer):
+class HashSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Hash
         fields = '__all__'
 
-class PrivateKeySerializer(ReadOnlyOwnerSerializer):
+class MessageSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    class Meta:
+        model = Message
+        fields = '__all__'
+
+class PrivateKeySerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     key_from_bytes = serializers.SerializerMethodField()
 

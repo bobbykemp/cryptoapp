@@ -1,6 +1,6 @@
 import json
 
-from Crypto.Hash import MD5
+from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -31,7 +31,6 @@ class CreateUserView(FormView):
 
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
-    queryset = PrivateKey.objects.all()
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -44,4 +43,17 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
         private_key = get_object_or_404(PrivateKey, pk=pk)
         return JsonResponse({'key': private_key.get_public_key().decode('utf-8')})
 
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        return Message.objects.filter(owner=self.request.user)
+
+    def create(self, request):
+        data = request.data['contents'].encode('utf-8')
+        private_key = request.data['recipient_private_key']
 
