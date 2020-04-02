@@ -33,6 +33,19 @@ class CreateUserView(FormView):
         form.save()
         return super().form_valid(form)
 
+class HashViewSet(viewsets.GenericViewSet):
+    serializer_class = HashSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def create(self, request):
+        content = request.data['content']
+        return JsonResponse({
+            'Hashed_message': SHA256.new(bytes(content, 'utf-8')).hexdigest()
+        })
+
+
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
 

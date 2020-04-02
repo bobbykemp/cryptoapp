@@ -14,6 +14,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 class HashSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Hash
         fields = '__all__'
