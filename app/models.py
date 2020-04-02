@@ -16,5 +16,4 @@ class Hash(models.Model):
 class Message(models.Model):
     content = models.TextField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_owner')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_recipient')
     recipient_private_key = models.ForeignKey(PrivateKey, on_delete=models.CASCADE, related_name='message_recipient')

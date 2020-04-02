@@ -20,6 +20,10 @@ class HashSerializer(serializers.HyperlinkedModelSerializer):
 
 class MessageSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    recipient_private_key = serializers.PrimaryKeyRelatedField(
+        queryset=PrivateKey.objects.all()
+    )
+
     class Meta:
         model = Message
         fields = '__all__'
