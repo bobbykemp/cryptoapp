@@ -94,7 +94,11 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         signed = request.data['signed']
 
         # public key of the recipient to encrypt this message with
-        recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).get_public_key()
+        # can access anyone's public key via a reference to their private key
+        # this protect's the private key while also simplifying the database schema by
+        # one model
+        recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']) \
+                                                 .get_public_key()
         public_key = RSA.import_key(recipient_public_key)
 
         # randomly-generate session key for encryption
@@ -145,7 +149,13 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         # private key of recipient to decrypt message with
         # have to be this key's owner to decrypt
-        recipient_private_key = PrivateKey.objects.filter(owner=request.user).get(pk=request.data['recipient_private_key']).content
+        # on decryption, first filter by key owner then get the 
+        # private key's value; this ensure's only someone
+        # who own's the private key can decrypt a message intended
+        # for them
+        recipient_private_key = PrivateKey.objects.filter(owner=request.user) \
+                                                  .get(pk=request.data['recipient_private_key']) \
+                                                  .content
         private_key = RSA.import_key(recipient_private_key)
 
         if signed:
