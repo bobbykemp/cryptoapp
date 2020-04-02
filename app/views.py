@@ -10,9 +10,9 @@ from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from app.models import *
-from cryptoapp.forms import *
 from cryptoapp.serializers import *
 
 
@@ -29,29 +29,19 @@ class CreateUserView(FormView):
         form.save()
         return super().form_valid(form)
 
-class HashForm(FormView):
-    template_name = 'app/hash.html'
-    form_class = HashForm
-
-    def get_hash(self, hash):
-        h = MD5.new()
-        h.update(bytes(hash, encoding='utf-8'))
-        return h.hexdigest()
-
-    # called on posting of valid data
-    def form_valid(self, form):
-        hash_in = form.cleaned_data['value_to_hash']
-        hash_out = self.get_hash(hash_in)
-        return HttpResponse(hash_out)
-
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
+    queryset = PrivateKey.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
     def get_queryset(self):
         return PrivateKey.objects.filter(owner=self.request.user)
 
-class PublicKeyViewset(viewsets.ModelViewSet):
-    serializer_class = PublicKeySerializer
+    @action(detail=True, methods=['get'])
+    def get_public_key(self, request, pk=None):
+        private_key = get_object_or_404(PrivateKey, pk=pk)
+        return JsonResponse({'key': private_key.get_public_key().decode('utf-8')})
 
-    def get_queryset(self):
-        return PublicKey.objects.filter(owner=self.request.user)
+
