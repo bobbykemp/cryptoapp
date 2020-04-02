@@ -65,6 +65,19 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MessageSerializer
 
+    # dynamically determine how many references to show in
+    # drf frontend form based on routing action
+    serializer_action_classes = {
+        'encrypt': MessageSerializer,
+        'decrypt': MessageFilteredSerializer
+    }
+
+    def get_serializer_class(self):
+        try:
+            return self.serializer_action_classes[self.action]
+        except (KeyError, AttributeError):
+            return super().get_serializer_class()
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -120,6 +133,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'])
     def decrypt(self, request):
+        serializer = MessageFilteredSerializer
         # encrypted file to decrypt, may or may not
         # be signed
         file_in = request.data['file_to_decrypt']
@@ -130,9 +144,9 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         public_key = RSA.import_key(signing_public_key)
 
         # private key of recipient to decrypt message with
-        recipient_private_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).content
+        # have to be this key's owner to decrypt
+        recipient_private_key = PrivateKey.objects.filter(owner=request.user).get(pk=request.data['recipient_private_key']).content
         private_key = RSA.import_key(recipient_private_key)
-
 
         if signed:
             enc_session_key, nonce, tag, signature, ciphertext = \
