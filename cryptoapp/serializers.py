@@ -8,6 +8,7 @@ from app.models import *
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         request = self.context.get('request', None)
+        print(request)
         queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
         if not request or not queryset:
             return None

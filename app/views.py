@@ -16,6 +16,8 @@ from django.views.generic.edit import FormView
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FileUploadParser
+from rest_framework.renderers import HTMLFormRenderer, TemplateHTMLRenderer
+from rest_framework.response import Response
 
 from app.models import *
 from cryptoapp.serializers import *
@@ -64,6 +66,8 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = MessageSerializer
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'app/base.html'
 
     # dynamically determine how many references to show in
     # drf frontend form based on routing action
@@ -84,9 +88,17 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Message.objects.filter(owner=self.request.user)
 
-    @action(detail=False, methods=['post'])
+    def list(self, request):
+        return Response()
+
+    @action(detail=False, methods=['get', 'post'])
     def encrypt(self, request):
+        self.template_name = 'app/encryption.html'
         parser_classes = [FileUploadParser]
+
+        if request.method == 'GET':
+            serializer = self.get_serializer_class()
+            return Response({'serializer': serializer})
 
         # plaintext from user
         data = request.data['content'].encode('utf-8')
@@ -135,9 +147,15 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         return FileResponse(file_out, as_attachment=True)
 
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['get','post'])
     def decrypt(self, request):
         serializer = MessageFilteredSerializer
+        self.template_name = 'app/encryption.html'
+
+        if request.method == 'GET':
+            serializer = self.get_serializer_class()
+            return Response({'serializer': serializer(context={'request': request})})
+
         # encrypted file to decrypt, may or may not
         # be signed
         file_in = request.data['file_to_decrypt']
