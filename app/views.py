@@ -1,18 +1,20 @@
 import json
+from tempfile import TemporaryFile
 
+from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES, PKCS1_OAEP
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FileUploadParser
 
 from app.models import *
 from cryptoapp.serializers import *
@@ -57,6 +59,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'])
     def encrypt(self, request):
+        parser_classes = [FileUploadParser]
         data = request.data['content'].encode('utf-8')
         recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).get_public_key()
         public_key = RSA.import_key(recipient_public_key)
@@ -68,16 +71,33 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
         ciphertext, tag = cipher_aes.encrypt_and_digest(data)
 
-        return JsonResponse({
-            'enc_session_key': enc_session_key.decode('ISO-8859-1'),
-            'ciper_aes.nonce': cipher_aes.nonce.decode('ISO-8859-1'),
-            'tag': tag.decode('ISO-8859-1'),
-            'ciphertext': ciphertext.decode('ISO-8859-1')
-        })
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]
+
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True)
+
 
     @action(detail=False, methods=['post'])
     def decrypt(self, request):
-        data = request.data['content'].encode('ISO-8859-1')
+        file_in = request.data['file_to_decrypt']
+        recipient_private_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).content
+        private_key = RSA.import_key(recipient_private_key)
 
+        enc_session_key, nonce, tag, ciphertext = \
+            [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
 
+        # Decrypt the session key with the private RSA key
+        cipher_rsa = PKCS1_OAEP.new(private_key)
+        session_key = cipher_rsa.decrypt(enc_session_key)
+
+        # Decrypt the data with the AES session key
+        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+        data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        return JsonResponse({
+            'Decrypted_message': data.decode("utf-8")
+        })
 
