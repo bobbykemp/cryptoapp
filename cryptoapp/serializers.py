@@ -5,6 +5,14 @@ from rest_framework import serializers
 from app.models import *
 
 
+class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(owner=request.user)
+
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
@@ -23,6 +31,9 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     recipient_private_key = serializers.PrimaryKeyRelatedField(
         queryset=PrivateKey.objects.all()
+    )
+    signing_key = UserFilteredPrimaryKeyRelatedField(
+        queryset=PrivateKey.objects
     )
 
     class Meta:
