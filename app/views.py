@@ -4,6 +4,7 @@ from tempfile import TemporaryFile
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Signature import DSS
 from Crypto.Random import get_random_bytes
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -74,15 +75,24 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     def encrypt(self, request):
         parser_classes = [FileUploadParser]
         data = request.data['content'].encode('utf-8')
+        signed = request.data['signed']
         recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).get_public_key()
+        signing_key = PrivateKey.objects.get(pk=request.data['signing_key']).content
         public_key = RSA.import_key(recipient_public_key)
         session_key = get_random_bytes(16)
+
+        hash_ = SHA256.new(data)
+        signer = DSS.new(signing_key, 'fips-186-3')
+        signature = signer.sign(hash_)
 
         ciper_rrsa = PKCS1_OAEP.new(public_key)
         enc_session_key = ciper_rrsa.encrypt(session_key)
 
         cipher_aes = AES.new(session_key, AES.MODE_EAX)
-        ciphertext, tag = cipher_aes.encrypt_and_digest(data)
+        if signed:
+            ciphertext, tag = cipher_aes.encrypt_and_digest(signature)
+        else:
+            ciphertext, tag = cipher_aes.encrypt_and_digest(data)
 
         # 'w+b' mode by default
         file_out = TemporaryFile()
@@ -97,6 +107,8 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['post'])
     def decrypt(self, request):
         file_in = request.data['file_to_decrypt']
+        signed = request.data['signed']
+        signing_public_key = PrivateKey.objects.get(pk=request.data['signing_key']).get_public_key()
         recipient_private_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']).content
         private_key = RSA.import_key(recipient_private_key)
 
