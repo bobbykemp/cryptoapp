@@ -1,19 +1,26 @@
 import json
+from tempfile import TemporaryFile
 
-from Crypto.Hash import MD5
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Random import get_random_bytes
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FileUploadParser
+from rest_framework.renderers import HTMLFormRenderer, TemplateHTMLRenderer
+from rest_framework.response import Response
+
 
 from app.models import *
-from cryptoapp.forms import *
 from cryptoapp.serializers import *
 
 
@@ -30,55 +37,172 @@ class CreateUserView(FormView):
         form.save()
         return super().form_valid(form)
 
-class HashForm(FormView):
-    template_name = 'app/hash.html'
-    form_class = HashForm
+class HashViewSet(viewsets.GenericViewSet):
+    serializer_class = HashSerializer
 
-    def get_hash(self, hash):
-        h = MD5.new()
-        h.update(bytes(hash, encoding='utf-8'))
-        return h.hexdigest()
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
-    # called on posting of valid data
-    def form_valid(self, form):
-        hash_in = form.cleaned_data['value_to_hash']
-        hash_out = self.get_hash(hash_in)
-        return HttpResponse(hash_out)
+    def create(self, request):
+        content = request.data['content']
+        return JsonResponse({
+            'Hashed_message': SHA256.new(bytes(content, 'utf-8')).hexdigest()
+        })
+
 
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     def get_queryset(self):
         return PrivateKey.objects.filter(owner=self.request.user)
 
-<<<<<<< HEAD
-=======
-    def private_gen(self, request):
-        key = RSA.generate(2048) # 2048 is secure enough for modern standards
-        return key.export_key('PEM')
-
     @action(detail=True, methods=['get'])
-    def get_public_keys(self, request, pk=None):
+    def get_public_key(self, request, pk=None):
         private_key = get_object_or_404(PrivateKey, pk=pk)
-        queryset = PublicKey.objects.filter(private_key=private_key.pk)
-        serializer = PublicKeySerializer(queryset, many=True)
-        return JsonResponse(serializer.data, status=200)
+        return JsonResponse({'key': private_key.get_public_key().decode('utf-8')})
 
-    def create(self, request):
-        key = self.private_gen(request)
-        private_key_serializer = self.get_serializer_class()
-        serialized = private_key_serializer(
-            data={
-                'content': key,
-                'owner': request.user,
-            }
-        )
-        serialized.save()
-        return JsonResponse(serialized.data, status=201)
 
->>>>>>> 9e8f3c23b275d1dcfcb30a18f70ed1fcd639cd80
-class PublicKeyViewset(viewsets.ModelViewSet):
-    serializer_class = PublicKeySerializer
+class MessageViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = MessageSerializer
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'app/base.html'
+
+    # dynamically determine how many references to show in
+    # drf frontend form based on routing action
+    serializer_action_classes = {
+        'encrypt': MessageSerializer,
+        'decrypt': DecryptionSerializer
+    }
+
+    def get_serializer_class(self):
+        try:
+            return self.serializer_action_classes[self.action]
+        except (KeyError, AttributeError):
+            return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
     def get_queryset(self):
-        return PublicKey.objects.filter(owner=self.request.user)
+        return Message.objects.filter(owner=self.request.user)
+
+    @action(detail=False, methods=['get', 'post'])
+    def encrypt(self, request):
+        self.template_name = 'app/encryption.html'
+        parser_classes = [FileUploadParser]
+
+        if request.method == 'GET':
+            serializer = self.get_serializer_class()
+            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
+
+        # plaintext from user
+        data = request.data['content'].encode('utf-8')
+        # did user request a signature
+        signed = request.data['signed']
+
+        # public key of the recipient to encrypt this message with
+        # can access anyone's public key via a reference to their private key
+        # this protect's the private key while also simplifying the database schema by
+        # one model
+        recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']) \
+                                                 .get_public_key()
+        public_key = RSA.import_key(recipient_public_key)
+
+        # randomly-generate session key for encryption
+        session_key = get_random_bytes(16)
+
+        # private key of the _sender_ to sign this message with
+        # signing with the sender's private key means that
+        # the reciever can verify the signature with the signer's public key
+        signing_key = PrivateKey.objects.get(pk=request.data['signing_key']).content
+        private_key = RSA.import_key(signing_key)
+
+        # hash of plaintext for signature
+        hash_ = SHA256.new(data)
+        signature = pkcs1_15.new(private_key).sign(hash_)
+
+        ciper_rrsa = PKCS1_OAEP.new(public_key)
+        enc_session_key = ciper_rrsa.encrypt(session_key)
+
+        cipher_aes = AES.new(session_key, AES.MODE_EAX)
+        ciphertext, tag = cipher_aes.encrypt_and_digest(data)
+
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        # [print('{} : {}'.format(x, len(x))) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext)]
+
+        if signed:
+            [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext) ]
+        else:
+            [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]
+
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True)
+
+
+    @action(detail=False, methods=['get','post'])
+    def decrypt(self, request):
+        serializer = DecryptionSerializer
+        self.template_name = 'app/encryption.html'
+
+        if request.method == 'GET':
+            serializer = self.get_serializer_class()
+            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
+
+        # encrypted file to decrypt, may or may not
+        # be signed
+        file_in = request.data['file_to_decrypt']
+        # whether or not the file is signed
+        signed = request.data['signed']
+        # RSA public key of sender to verify signature agains
+        signing_public_key = PrivateKey.objects.get(pk=request.data['signing_key']).get_public_key()
+        public_key = RSA.import_key(signing_public_key)
+
+        # private key of recipient to decrypt message with
+        # have to be this key's owner to decrypt
+        # on decryption, first filter by key owner then get the 
+        # private key's value; this ensure's only someone
+        # who own's the private key can decrypt a message intended
+        # for them
+        recipient_private_key = PrivateKey.objects.filter(owner=request.user) \
+                                                  .get(pk=request.data['recipient_private_key']) \
+                                                  .content
+        private_key = RSA.import_key(recipient_private_key)
+
+        if signed:
+            enc_session_key, nonce, tag, signature, ciphertext = \
+                [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, public_key.size_in_bytes(), -1) ]
+        else:
+            enc_session_key, nonce, tag, ciphertext = \
+                [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
+
+        # Decrypt the session key with the private RSA key
+        cipher_rsa = PKCS1_OAEP.new(private_key)
+        session_key = cipher_rsa.decrypt(enc_session_key)
+
+        # Decrypt the data with the AES session key
+        cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
+        data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+
+        # take hash of message and seek back to file start
+        hash_ = SHA256.new(data)
+
+        is_sig_valid = 'message not signed'
+
+        if signed:
+            try:
+                pkcs1_15.new(public_key).verify(hash_, signature)
+                is_sig_valid = 'signature is valid'
+            except(ValueError, TypeError):
+                is_sig_valid = 'signature is INVALID'
+
+        return JsonResponse({
+            'Decrypted_message': data.decode("utf-8"),
+            'Signature status': is_sig_valid
+        })
+
