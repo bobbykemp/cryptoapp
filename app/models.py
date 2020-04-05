@@ -20,3 +20,4 @@ class Message(models.Model):
     file_to_decrypt = models.FileField(blank=True)
     signed = models.BooleanField(default=False)
     signing_key = models.ForeignKey(PrivateKey, on_delete=models.CASCADE, blank=True, null=True)
+
