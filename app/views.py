@@ -73,7 +73,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     # drf frontend form based on routing action
     serializer_action_classes = {
         'encrypt': MessageSerializer,
-        'decrypt': MessageFilteredSerializer
+        'decrypt': DecryptionSerializer
     }
 
     def get_serializer_class(self):
@@ -88,9 +88,6 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Message.objects.filter(owner=self.request.user)
 
-    def list(self, request):
-        return Response()
-
     @action(detail=False, methods=['get', 'post'])
     def encrypt(self, request):
         self.template_name = 'app/encryption.html'
@@ -98,7 +95,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         if request.method == 'GET':
             serializer = self.get_serializer_class()
-            return Response({'serializer': serializer})
+            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
 
         # plaintext from user
         data = request.data['content'].encode('utf-8')
@@ -149,12 +146,12 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get','post'])
     def decrypt(self, request):
-        serializer = MessageFilteredSerializer
+        serializer = DecryptionSerializer
         self.template_name = 'app/encryption.html'
 
         if request.method == 'GET':
             serializer = self.get_serializer_class()
-            return Response({'serializer': serializer(context={'request': request})})
+            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
 
         # encrypted file to decrypt, may or may not
         # be signed

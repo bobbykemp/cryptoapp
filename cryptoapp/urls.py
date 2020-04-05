@@ -26,9 +26,10 @@ router.register(r'message', MessageViewSet, basename="message")
 router.register(r'hash', HashViewSet, basename="hash")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('signup/', CreateUserView.as_view()),
     path('rsa/', TemplateView.as_view(template_name="app/rsa.html")),
+    path('', TemplateView.as_view(template_name="app/base.html")),
 ]

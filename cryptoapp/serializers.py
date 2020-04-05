@@ -36,12 +36,13 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
     signing_key = serializers.PrimaryKeyRelatedField(
         queryset=PrivateKey.objects.all()
     )
+    file_to_decrypt = serializers.HiddenField(default='')
 
     class Meta:
         model = Message
         fields = '__all__'
 
-class MessageFilteredSerializer(serializers.HyperlinkedModelSerializer):
+class DecryptionSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     recipient_private_key = UserFilteredPrimaryKeyRelatedField(
         queryset=PrivateKey.objects
@@ -49,6 +50,7 @@ class MessageFilteredSerializer(serializers.HyperlinkedModelSerializer):
     signing_key = serializers.PrimaryKeyRelatedField(
         queryset=PrivateKey.objects.all()
     )
+    content = serializers.HiddenField(default='')
 
     class Meta:
         model = Message

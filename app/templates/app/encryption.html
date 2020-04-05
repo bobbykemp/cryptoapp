@@ -1,7 +1,13 @@
+{% extends "app/base.html" %}
+{% block content %}
 {%load rest_framework%}
 
-<form action="/message/encrypt/" method="post">
+{%with loc='message-'|add:action %}
+<form action="{% url loc %}" method="post">
     {%csrf_token%}
     {%render_form serializer%}
-    <input type="submit" value="Save" />
+    <input type="submit" value="{{action|capfirst}}" />
 </form>
+{%endwith%}
+
+{%endblock%}
