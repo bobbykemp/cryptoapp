@@ -1,10 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 from Crypto.PublicKey import RSA
+import secrets
 
 class PrivateKey(models.Model):
     content  = models.BinaryField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    secure_id = models.CharField(max_length=100, unique=True)
 
     def get_public_key(self):
         return RSA.import_key(self.content).publickey().export_key('PEM')

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from app.models import *
-
+import secrets
 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
@@ -28,7 +28,7 @@ class HashSerializer(serializers.HyperlinkedModelSerializer):
         model = Hash
         fields = '__all__'
 
-class MessageSerializer(serializers.HyperlinkedModelSerializer):
+class MessageSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     recipient_private_key = serializers.PrimaryKeyRelatedField(
         queryset=PrivateKey.objects.all()
@@ -42,7 +42,7 @@ class MessageSerializer(serializers.HyperlinkedModelSerializer):
         model = Message
         fields = '__all__'
 
-class DecryptionSerializer(serializers.HyperlinkedModelSerializer):
+class DecryptionSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     recipient_private_key = UserFilteredPrimaryKeyRelatedField(
         queryset=PrivateKey.objects
@@ -56,8 +56,9 @@ class DecryptionSerializer(serializers.HyperlinkedModelSerializer):
         model = Message
         fields = '__all__'
 
-class PrivateKeySerializer(serializers.HyperlinkedModelSerializer):
+class PrivateKeySerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
+    secure_id = serializers.ReadOnlyField()
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     key_from_bytes = serializers.SerializerMethodField()
 
@@ -76,6 +77,7 @@ class PrivateKeySerializer(serializers.HyperlinkedModelSerializer):
         priv_key = PrivateKey(
             content=gen,
             owner=validated_data['owner'],
+            secure_id=secrets.token_urlsafe(32)
         )
         priv_key.save()
         return priv_key

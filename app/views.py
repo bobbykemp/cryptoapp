@@ -1,4 +1,5 @@
 import json
+import secrets
 from tempfile import TemporaryFile
 
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -52,9 +53,13 @@ class HashViewSet(viewsets.GenericViewSet):
 
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
+    lookup_field = 'secure_id'
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(
+            owner=self.request.user,
+            secure_id=secrets.token_urlsafe(5)
+        )
 
     def get_queryset(self):
         return PrivateKey.objects.filter(owner=self.request.user)

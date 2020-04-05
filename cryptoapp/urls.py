@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
 from app.views import *
 
 router = routers.DefaultRouter()
@@ -26,10 +27,10 @@ router.register(r'message', MessageViewSet, basename="message")
 router.register(r'hash', HashViewSet, basename="hash")
 
 urlpatterns = [
-    path('api/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('signup/', CreateUserView.as_view()),
-    path('rsa/', TemplateView.as_view(template_name="app/rsa.html")),
-    path('', TemplateView.as_view(template_name="app/base.html")),
+    path('api/',            include(router.urls)),
+    path('api-auth/',       include('rest_framework.urls', namespace='rest_framework')),
+    path('accounts/',       include('django.contrib.auth.urls')),
+    path('signup/',         CreateUserView.as_view()),
+    path('rsa/',            TemplateView.as_view(template_name="app/rsa.html")),
+    path('',                TemplateView.as_view(template_name="app/base.html")),
 ]
