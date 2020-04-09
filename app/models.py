@@ -14,8 +14,10 @@ class PrivateKey(models.Model):
 
 class UserKeys(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    signing_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='signing_key')
-    messaging_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='messaging_key')
+    # the private key of a keypair that any messages will be signed with
+    signing_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='signing_key', blank=True, null=True)
+    # the private key of a keypair that will be used for message encryption
+    messaging_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='messaging_key', blank=True, null=True)
 
 class Hash(models.Model):
     content = models.TextField()

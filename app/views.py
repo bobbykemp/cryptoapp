@@ -10,6 +10,8 @@ from Crypto.Random import get_random_bytes
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core import serializers
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
@@ -24,14 +26,18 @@ from rest_framework.response import Response
 from app.models import *
 from cryptoapp.serializers import *
 
+@receiver(post_save, sender=User)
+def createUserKeys(sender, **kwargs):
+    UserKeys.objects.create(
+        user=kwargs['instance']
+    )
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
-
-
         serializer.save(
             owner=self.request.user,
         )
@@ -47,11 +53,6 @@ class CreateUserView(FormView):
     success_url = '/'
 
     def form_valid(self, form):
-
-        UserKeys.objects.create(
-            user=self.request.user,
-        )
-
         form.save()
         return super().form_valid(form)
 

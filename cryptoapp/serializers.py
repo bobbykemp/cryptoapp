@@ -22,10 +22,12 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'username',
         ]
 
-class UserKeysSerializer(serializers.HyperlinkedModelSerializer):
+class UserKeysSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     class Meta:
         model = UserKeys
         fields = '__all__'
+        depth=1
 
 class HashSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)

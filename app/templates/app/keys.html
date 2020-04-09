@@ -2,21 +2,34 @@
 {% block content %}
 {%load rest_framework%}
 
-<table class="table table-dark">
-  <thead>
-  <tr>
-    <th scope="col">ID</th>
-    <th scope="col">Private Key</th>
-    <th scope="col">Public Key</th>
-  </tr>
-  </thead>
-  <tbody id="key-table-body">
-  </tbody>
-</table>
+<div class="container">
+  <div class="row pb-3">
+    <div class="col">
+      <a class="btn btn-dark" href="#" onclick="makeKey()">+ Create New KeyPair +</a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <table class="table table-dark">
+        <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Private Key</th>
+          <th scope="col">Public Key</th>
+        </tr>
+        </thead>
+        <tbody id="key-table-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 <script>
 
-  $(document).ready(function() {
+  var getKeys = function(){
+    $('#key-table-body').empty();
     $.ajax({
       url: '/api/private-key/',
       dataType: 'json',
@@ -28,16 +41,56 @@
             <tr>
               <td>${id}</td>
               <td>
-                <a class="btn btn-light" href="/api/private-key/${id}/get_private_key_as_file/">Download Private Key</a>
+                <a  class="btn btn-light"
+                    href="/api/private-key/${id}/get_private_key_as_file/"
+                    onclick="alert('Never share your private key with anyone.')">
+                    Download Private Key
+                </a>
               </td>
               <td>
                 <a class="btn btn-light" href="/api/private-key/${id}/get_public_key_as_file/">Download Public Key</a>
+              </td>
+              <td>
+                <a class="btn btn-light" href="#" onclick="destroyKey('${id}')">Delete This KeyPair</a>
               </td>
             </tr>
           `);
         });
       }
     });
+  };
+
+  var makeKey = function(){
+    $.ajax({
+      url: '/api/private-key/',
+      method: 'POST',
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+      success: function(){
+        getKeys();
+      }
+    })
+  };
+
+  var destroyKey = function(key_id){
+    if (confirm("Are you sure?")){
+      $.ajax({
+        url: '/api/private-key/' + key_id + '/',
+        method: 'DELETE',
+        beforeSend(xhr, settings) {
+          xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+        },
+        success: function(){
+          getKeys();
+        }
+      });
+    }
+  };
+
+  $(document).ready(function() {
+
+    getKeys();
 
     $("#key-table-body").on('click', ':button', function(){
       var id = $(this).attr('id');
