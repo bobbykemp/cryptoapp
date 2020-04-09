@@ -1,5 +1,5 @@
 import json
-import secrets
+import uuid
 from tempfile import TemporaryFile
 
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -29,12 +29,29 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def perform_create(self, serializer):
+
+
+        serializer.save(
+            owner=self.request.user,
+        )
+
+class UserKeysViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UserKeys.objects.all()
+    serializer_class = UserKeysSerializer
+
+
 class CreateUserView(FormView):
     template_name = 'registration/signup.html' 
     form_class = UserCreationForm
     success_url = '/'
 
     def form_valid(self, form):
+
+        UserKeys.objects.create(
+            user=self.request.user,
+        )
+
         form.save()
         return super().form_valid(form)
 
@@ -58,16 +75,43 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(
             owner=self.request.user,
-            secure_id=secrets.token_urlsafe(5)
+            secure_id=uuid.uuid4()
         )
 
     def get_queryset(self):
         return PrivateKey.objects.filter(owner=self.request.user)
 
     @action(detail=True, methods=['get'])
-    def get_public_key(self, request, pk=None):
-        private_key = get_object_or_404(PrivateKey, pk=pk)
+    def get_public_key(self, request, secure_id=None):
+        private_key = get_object_or_404(PrivateKey, secure_id=secure_id)
         return JsonResponse({'key': private_key.get_public_key().decode('utf-8')})
+
+    @action(detail=True, methods=['get'])
+    def get_public_key_as_file(self, request, secure_id=None):
+        public_key = get_object_or_404(PrivateKey, secure_id=secure_id).get_public_key()
+
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        file_out.write(public_key)
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True)
+
+    @action(detail=True, methods=['get'])
+    def get_private_key_as_file(self, request, secure_id=None):
+        private_key = PrivateKey.objects \
+                                        .filter(owner=request.user) \
+                                        .get(secure_id=secure_id) \
+                                        .content
+
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        file_out.write(private_key)
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True)
 
 
 class MessageViewSet(viewsets.ReadOnlyModelViewSet):

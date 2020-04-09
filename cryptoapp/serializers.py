@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from app.models import *
-import secrets
+import uuid
 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
@@ -21,6 +21,11 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'url',
             'username',
         ]
+
+class UserKeysSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = UserKeys
+        fields = '__all__'
 
 class HashSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -59,8 +64,8 @@ class DecryptionSerializer(serializers.ModelSerializer):
 class PrivateKeySerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
     secure_id = serializers.ReadOnlyField()
-    owner = serializers.PrimaryKeyRelatedField(read_only=True)
     key_from_bytes = serializers.SerializerMethodField()
+    owner = UserSerializer(read_only=True)
 
     # attribute method
     def get_key_from_bytes(self, obj):
@@ -77,7 +82,7 @@ class PrivateKeySerializer(serializers.ModelSerializer):
         priv_key = PrivateKey(
             content=gen,
             owner=validated_data['owner'],
-            secure_id=secrets.token_urlsafe(32)
+            secure_id=uuid.uuid4()
         )
         priv_key.save()
         return priv_key
@@ -85,4 +90,5 @@ class PrivateKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = PrivateKey
         fields = '__all__'
+        depth = 1
 

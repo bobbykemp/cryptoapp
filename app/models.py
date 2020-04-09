@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from Crypto.PublicKey import RSA
-import secrets
+import uuid
+
 
 class PrivateKey(models.Model):
     content  = models.BinaryField()
@@ -10,6 +11,11 @@ class PrivateKey(models.Model):
 
     def get_public_key(self):
         return RSA.import_key(self.content).publickey().export_key('PEM')
+
+class UserKeys(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    signing_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='signing_key')
+    messaging_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='messaging_key')
 
 class Hash(models.Model):
     content = models.TextField()
