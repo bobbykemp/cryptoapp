@@ -25,10 +25,10 @@ class Hash(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class Message(models.Model):
-    content = models.TextField()
+    content = models.FileField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_owner')
-    recipient_private_key = models.ForeignKey(PrivateKey, on_delete=models.CASCADE, related_name='message_recipient')
-    file_to_decrypt = models.FileField(blank=True)
+    recipient_public_key = models.FileField()
+    file_to_decrypt = models.FileField()
     signed = models.BooleanField(default=False)
     signing_key = models.ForeignKey(PrivateKey, on_delete=models.CASCADE, blank=True, null=True)
 

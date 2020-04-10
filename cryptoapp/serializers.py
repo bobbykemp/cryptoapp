@@ -59,9 +59,6 @@ class HashSerializer(serializers.HyperlinkedModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    recipient_private_key = serializers.PrimaryKeyRelatedField(
-        queryset=PrivateKey.objects.all()
-    )
     signing_key = serializers.PrimaryKeyRelatedField(
         queryset=PrivateKey.objects.all()
     )
@@ -73,7 +70,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class DecryptionSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    recipient_private_key = UserFilteredPrimaryKeyRelatedField(
+    recipient_public_key = UserFilteredPrimaryKeyRelatedField(
         queryset=PrivateKey.objects
     )
     signing_key = serializers.PrimaryKeyRelatedField(
