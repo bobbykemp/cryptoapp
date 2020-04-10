@@ -57,14 +57,14 @@
               <td>
                 <div class="btn-group" data-toggle="buttons">
                   <label class="btn btn-primary">
-                    <input type="radio" name="signing" id="signing-${id}" onclick="setKey('signing', '${id}');"/> Set This as Signing Key
+                    <input type="radio" name="signing" pk="${id}" id="signing-${id}" onclick="setKey('signing', '${id}');"/> Set This as Signing Key
                   </label>
                 </div>
               </td>
               <td>
                 <div class="btn-group" data-toggle="buttons">
                   <label class="btn btn-primary">
-                    <input type="radio" name="encryption" id="encryption-${id}" onclick="setKey('messaging', '${id}');"/> Set This as Encryption Key
+                    <input type="radio" name="messaging" pk="${id}" id="encryption-${id}" onclick="setKey('messaging', '${id}');"/> Set This as Encryption Key
                   </label>
                 </div>
               </td>
@@ -73,7 +73,28 @@
         });
       }
     });
+    setChecks();
   };
+
+  var setChecks = function(){
+    $.ajax({
+      url: '/api/user-keys/',
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+    }).done(function(data){
+        var s_pk = data[0]['signing_key'];
+        var m_pk = data[0]['messaging_key'];
+        $('#key-table-body').find('td div label input').each(function(index, element){
+          if($(element).attr('pk') == s_pk && $(element).attr('name') == 'signing'){
+            $(element).attr('checked', 'checked');
+          }
+          if($(element).attr('pk') == m_pk && $(element).attr('name') == 'messaging'){
+            $(element).attr('checked', 'checked');
+          }
+        });
+    });
+  }
 
   var makeKey = function(){
     $.ajax({
@@ -105,10 +126,7 @@
 
   var setKey = function(type, key_id){
     var name = type+'_key';
-    var data = {
-      'signing_key': null,
-      'messaging_key': null
-    };
+    var data = {};
     data[name] = key_id;
     json_data = JSON.stringify(data);
     $.ajax({
@@ -129,6 +147,7 @@
   $(document).ready(function() {
 
     getKeys();
+    setChecks();
 
     $("#key-table-body").on('click', ':button', function(){
       var id = $(this).attr('id');

@@ -37,14 +37,14 @@ class UserKeysSerializer(serializers.ModelSerializer):
         read_only=False,
         queryset=PrivateKey.objects,
         slug_field='secure_id',
-        allow_null=True
+        required=False
     )
     messaging_key = UserFilteredSlugRelatedField(
         many=False,
         read_only=False,
         queryset=PrivateKey.objects,
         slug_field='secure_id',
-        allow_null=True
+        required=False
     )
 
     class Meta:
