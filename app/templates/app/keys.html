@@ -31,7 +31,7 @@
   var getKeys = function(){
     $('#key-table-body').empty();
     $.ajax({
-      url: '/api/private-key/',
+      url: '/api/private-keys/',
       dataType: 'json',
       success: function(data){
         $.each(data, function(index){
@@ -43,30 +43,30 @@
               <td>${id}</td>
               <td>
                 <a  class="btn btn-light"
-                    href="/api/private-key/${id}/get_private_key_as_file/"
+                    href="/api/private-keys/${id}/get_private_key_as_file/"
                     onclick="alert('Never share your private key with anyone.')">
                     Download Private Key
                 </a>
               </td>
               <td>
-                <a class="btn btn-light" href="/api/private-key/${id}/get_public_key_as_file/">Download Public Key</a>
+                <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
               </td>
               <td>
-                <a class="btn btn-light" href="#" onclick="destroyKey('${id}')">Delete This KeyPair</a>
-              </td>
-              <td>
-                <div class="btn-group" data-toggle="buttons">
-                  <label class="btn btn-primary">
-                    <input type="radio" name="signing" pk="${id}" id="signing-${id}" onclick="setKey('signing', '${id}');"/> Set This as Signing Key
+                <div class="btn-group" data-toggle="buttons" onclick="setKey('signing', '${id}');">
+                  <label class="btn btn-light">
+                    <input type="radio" name="signing" pk="${id}" id="signing-${id}"/> Set This as Signing Key
                   </label>
                 </div>
               </td>
               <td>
-                <div class="btn-group" data-toggle="buttons">
-                  <label class="btn btn-primary">
-                    <input type="radio" name="messaging" pk="${id}" id="encryption-${id}" onclick="setKey('messaging', '${id}');"/> Set This as Encryption Key
+                <div class="btn-group" data-toggle="buttons" onclick="setKey('messaging', '${id}');">
+                  <label class="btn btn-light">
+                    <input type="radio" name="messaging" pk="${id}" id="encryption-${id}"/> Set This as Encryption Key
                   </label>
                 </div>
+              </td>
+              <td>
+                <a class="btn btn-danger" href="#" onclick="destroyKey('${id}')">Delete This KeyPair</a>
               </td>
             </tr>
           `);
@@ -78,13 +78,13 @@
 
   var setChecks = function(){
     $.ajax({
-      url: '/api/user-keys/',
+      url: '/api/user-keys/{{request.user.id}}/',
       beforeSend(xhr, settings) {
         xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
       },
     }).done(function(data){
-        var s_pk = data[0]['signing_key'];
-        var m_pk = data[0]['messaging_key'];
+        var s_pk = data['signing_key'];
+        var m_pk = data['messaging_key'];
         $('#key-table-body').find('td div label input').each(function(index, element){
           if($(element).attr('pk') == s_pk && $(element).attr('name') == 'signing'){
             $(element).attr('checked', 'checked');
@@ -98,7 +98,7 @@
 
   var makeKey = function(){
     $.ajax({
-      url: '/api/private-key/',
+      url: '/api/private-keys/',
       method: 'POST',
       beforeSend(xhr, settings) {
         xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
@@ -112,7 +112,7 @@
   var destroyKey = function(key_id){
     if (confirm("Are you sure?")){
       $.ajax({
-        url: '/api/private-key/' + key_id + '/',
+        url: '/api/private-keys/' + key_id + '/',
         method: 'DELETE',
         beforeSend(xhr, settings) {
           xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
@@ -153,7 +153,7 @@
       var id = $(this).attr('id');
       var type = $(this).attr('keytype');
       $.ajax({
-        url: '/api/private-key/' + id + '/get_' + type + '_key_as_file/',
+        url: '/api/private-keys/' + id + '/get_' + type + '_key_as_file/',
         method: 'POST',
         dataType: 'octet-stream',
         beforeSend(xhr, settings) {

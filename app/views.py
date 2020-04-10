@@ -5,27 +5,27 @@ from tempfile import TemporaryFile
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
-from Crypto.Signature import pkcs1_15
 from Crypto.Random import get_random_bytes
+from Crypto.Signature import pkcs1_15
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.parsers import FileUploadParser
 from rest_framework.renderers import HTMLFormRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
-from rest_framework.mixins import UpdateModelMixin
-
 
 from app.models import *
 from cryptoapp.serializers import *
+
 
 @receiver(post_save, sender=User)
 def createUserKeys(sender, **kwargs):
@@ -47,9 +47,8 @@ class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     serializer_class = UserKeysSerializer
     lookup_field = 'user'
 
-    def get_queryset(self):
-        return UserKeys.objects.filter(user=self.request.user)
-
+    # def get_queryset(self):
+    #     return UserKeys.objects.filter(user=self.request.user)
 
 
 class CreateUserView(FormView):
@@ -260,4 +259,3 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
             'Decrypted_message': data.decode("utf-8"),
             'Signature status': is_sig_valid
         })
-

@@ -22,7 +22,7 @@ from app.views import *
 
 router = routers.DefaultRouter()
 router.register(r'user', UserViewSet, basename="user")
-router.register(r'private-key', PrivateKeyViewset, basename="privatekey")
+router.register(r'private-keys', PrivateKeyViewset, basename="privatekey")
 router.register(r'message', MessageViewSet, basename="message")
 router.register(r'hash', HashViewSet, basename="hash")
 router.register(r'user-keys', UserKeysViewSet, basename="user-key")
@@ -33,6 +33,7 @@ urlpatterns = [
     path('accounts/',       include('django.contrib.auth.urls')),
     path('signup/',         CreateUserView.as_view()),
     path('rsa/',            TemplateView.as_view(template_name="app/rsa.html")),
-    path('keys/',           TemplateView.as_view(template_name="app/keys.html")),
+    path('my-keys/',        TemplateView.as_view(template_name="app/keys.html")),
+    path('public-keys/',    TemplateView.as_view(template_name="app/key_store.html")),
     path('',                TemplateView.as_view(template_name="app/base.html")),
 ]

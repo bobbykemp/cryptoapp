@@ -29,12 +29,12 @@
       success: function(data){
         $.each(data, function(index){
           var username = data[index]['user']['username'];
-          var username = data[index]['']['username'];
+          var id = data[index]['messaging_key'];
           $('#key-table-body').append(`
             <tr>
               <td>${username}</td>
               <td>
-                <a class="btn btn-light" href="/api/private-key/${id}/get_public_key_as_file/">Download Public Key</a>
+                <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
               </td>
             </tr>
           `);
@@ -43,53 +43,10 @@
     });
   };
 
-  var makeKey = function(){
-    $.ajax({
-      url: '/api/private-key/',
-      method: 'POST',
-      beforeSend(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
-      },
-      success: function(){
-        getKeys();
-      }
-    })
-  };
-
-  var destroyKey = function(key_id){
-    if (confirm("Are you sure?")){
-      $.ajax({
-        url: '/api/private-key/' + key_id + '/',
-        method: 'DELETE',
-        beforeSend(xhr, settings) {
-          xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
-        },
-        success: function(){
-          getKeys();
-        }
-      });
-    }
-  };
-
   $(document).ready(function() {
 
     getKeys();
 
-    $("#key-table-body").on('click', ':button', function(){
-      var id = $(this).attr('id');
-      var type = $(this).attr('keytype');
-      $.ajax({
-        url: '/api/private-key/' + id + '/get_' + type + '_key_as_file/',
-        method: 'POST',
-        dataType: 'octet-stream',
-        beforeSend(xhr, settings) {
-          xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
-        },
-        success: function(data){
-          console.log(data);
-        }
-      })
-    });
   });
 
 </script>
