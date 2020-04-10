@@ -11,18 +11,18 @@
 
   <div class="row">
     <div class="col">
-      <table class="table table-dark">
-        <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Private Key</th>
-          <th scope="col">Public Key</th>
-        </tr>
-        </thead>
-        <tbody id="key-table-body">
-        </tbody>
-      </table>
-    </div>
+        <table class="table table-dark">
+          <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Private Key</th>
+            <th scope="col">Public Key</th>
+          </tr>
+          </thead>
+          <tbody id="key-table-body">
+          </tbody>
+        </table>
+      </div>
   </div>
 </div>
 
@@ -36,6 +36,7 @@
       success: function(data){
         $.each(data, function(index){
           var id = data[index]['secure_id'];
+          var pk = data[index]['id'];
           var key = data[index]['key_from_bytes'];
           $('#key-table-body').append(`
             <tr>
@@ -52,6 +53,20 @@
               </td>
               <td>
                 <a class="btn btn-light" href="#" onclick="destroyKey('${id}')">Delete This KeyPair</a>
+              </td>
+              <td>
+                <div class="btn-group" data-toggle="buttons">
+                  <label class="btn btn-primary">
+                    <input type="radio" name="signing" id="signing-${id}" onclick="setKey('signing', '${id}');"/> Set This as Signing Key
+                  </label>
+                </div>
+              </td>
+              <td>
+                <div class="btn-group" data-toggle="buttons">
+                  <label class="btn btn-primary">
+                    <input type="radio" name="encryption" id="encryption-${id}" onclick="setKey('messaging', '${id}');"/> Set This as Encryption Key
+                  </label>
+                </div>
               </td>
             </tr>
           `);
@@ -86,6 +101,29 @@
         }
       });
     }
+  };
+
+  var setKey = function(type, key_id){
+    var name = type+'_key';
+    var data = {
+      'signing_key': null,
+      'messaging_key': null
+    };
+    data[name] = key_id;
+    json_data = JSON.stringify(data);
+    $.ajax({
+      url: '/api/user-keys/{{request.user.id}}/',
+      method: 'PUT',
+      dataType: 'json',
+      contentType: 'application/json',
+      data: json_data,
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+      success: function(){
+        getKeys();
+      }
+    });
   };
 
   $(document).ready(function() {

@@ -1,0 +1,97 @@
+{% extends "app/base.html" %}
+{% block content %}
+{%load rest_framework%}
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <table class="table table-dark">
+        <thead>
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody id="key-table-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  var getKeys = function(){
+    $('#key-table-body').empty();
+    $.ajax({
+      url: '/api/user-keys/',
+      dataType: 'json',
+      success: function(data){
+        $.each(data, function(index){
+          var username = data[index]['user']['username'];
+          var username = data[index]['']['username'];
+          $('#key-table-body').append(`
+            <tr>
+              <td>${username}</td>
+              <td>
+                <a class="btn btn-light" href="/api/private-key/${id}/get_public_key_as_file/">Download Public Key</a>
+              </td>
+            </tr>
+          `);
+        });
+      }
+    });
+  };
+
+  var makeKey = function(){
+    $.ajax({
+      url: '/api/private-key/',
+      method: 'POST',
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+      success: function(){
+        getKeys();
+      }
+    })
+  };
+
+  var destroyKey = function(key_id){
+    if (confirm("Are you sure?")){
+      $.ajax({
+        url: '/api/private-key/' + key_id + '/',
+        method: 'DELETE',
+        beforeSend(xhr, settings) {
+          xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+        },
+        success: function(){
+          getKeys();
+        }
+      });
+    }
+  };
+
+  $(document).ready(function() {
+
+    getKeys();
+
+    $("#key-table-body").on('click', ':button', function(){
+      var id = $(this).attr('id');
+      var type = $(this).attr('keytype');
+      $.ajax({
+        url: '/api/private-key/' + id + '/get_' + type + '_key_as_file/',
+        method: 'POST',
+        dataType: 'octet-stream',
+        beforeSend(xhr, settings) {
+          xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+        },
+        success: function(data){
+          console.log(data);
+        }
+      })
+    });
+  });
+
+</script>
+
+{%endblock%}

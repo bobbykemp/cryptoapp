@@ -12,8 +12,9 @@ class PrivateKey(models.Model):
     def get_public_key(self):
         return RSA.import_key(self.content).publickey().export_key('PEM')
 
+# accessed by user.userkeys
 class UserKeys(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     # the private key of a keypair that any messages will be signed with
     signing_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.CASCADE, related_name='signing_key', blank=True, null=True)
     # the private key of a keypair that will be used for message encryption

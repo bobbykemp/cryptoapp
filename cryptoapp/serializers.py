@@ -8,8 +8,15 @@ import uuid
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         request = self.context.get('request', None)
-        print(request)
         queryset = super(UserFilteredPrimaryKeyRelatedField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(owner=request.user)
+
+class UserFilteredSlugRelatedField(serializers.SlugRelatedField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(UserFilteredSlugRelatedField, self).get_queryset()
         if not request or not queryset:
             return None
         return queryset.filter(owner=request.user)
@@ -24,10 +31,25 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class UserKeysSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+
+    signing_key = UserFilteredSlugRelatedField(
+        many=False,
+        read_only=False,
+        queryset=PrivateKey.objects,
+        slug_field='secure_id',
+        allow_null=True
+    )
+    messaging_key = UserFilteredSlugRelatedField(
+        many=False,
+        read_only=False,
+        queryset=PrivateKey.objects,
+        slug_field='secure_id',
+        allow_null=True
+    )
+
     class Meta:
         model = UserKeys
         fields = '__all__'
-        depth=1
 
 class HashSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)

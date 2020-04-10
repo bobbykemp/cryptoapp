@@ -21,6 +21,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FileUploadParser
 from rest_framework.renderers import HTMLFormRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
+from rest_framework.mixins import UpdateModelMixin
 
 
 from app.models import *
@@ -28,10 +29,9 @@ from cryptoapp.serializers import *
 
 @receiver(post_save, sender=User)
 def createUserKeys(sender, **kwargs):
-    UserKeys.objects.create(
+    UserKeys.objects.get_or_create(
         user=kwargs['instance']
     )
-
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -42,9 +42,14 @@ class UserViewSet(viewsets.ModelViewSet):
             owner=self.request.user,
         )
 
-class UserKeysViewSet(viewsets.ReadOnlyModelViewSet):
+class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     queryset = UserKeys.objects.all()
     serializer_class = UserKeysSerializer
+    lookup_field = 'user'
+
+    def get_queryset(self):
+        return UserKeys.objects.filter(user=self.request.user)
+
 
 
 class CreateUserView(FormView):
