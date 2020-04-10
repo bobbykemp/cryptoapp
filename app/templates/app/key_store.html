@@ -27,17 +27,20 @@
       url: '/api/user-keys/',
       dataType: 'json',
       success: function(data){
+        console.log(data);
         $.each(data, function(index){
           var username = data[index]['user']['username'];
           var id = data[index]['messaging_key'];
-          $('#key-table-body').append(`
-            <tr>
-              <td>${username}</td>
-              <td>
-                <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
-              </td>
-            </tr>
-          `);
+          if (username != '{{request.user.username}}'){
+            $('#key-table-body').append(`
+              <tr>
+                <td>${username}</td>
+                <td>
+                  <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
+                </td>
+              </tr>
+            `);
+          }
         });
       }
     });
