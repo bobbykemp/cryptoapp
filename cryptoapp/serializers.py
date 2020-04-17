@@ -5,6 +5,26 @@ from rest_framework import serializers
 from app.models import *
 import uuid
 
+class UserRelationField(serializers.RelatedField):
+    def to_representation(self, value):
+        return '{}'.format(value.user.username)
+
+class AllOthersRelationField(UserRelationField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(AllOthersRelationField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.all().exclude(user=request.user)
+
+class MyRelationField(UserRelationField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super(MyRelationField, self).get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(user=request.user)
+
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
         request = self.context.get('request', None)
@@ -59,10 +79,13 @@ class HashSerializer(serializers.HyperlinkedModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    signing_key = serializers.PrimaryKeyRelatedField(
-        queryset=PrivateKey.objects.all()
-    )
     file_to_decrypt = serializers.HiddenField(default='')
+    recipient_public_key = AllOthersRelationField(
+        queryset=UserKeys.objects
+    )
+    signing_key = MyRelationField(
+        queryset=UserKeys.objects
+    )
 
     class Meta:
         model = Message
@@ -70,11 +93,11 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class DecryptionSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
-    recipient_public_key = UserFilteredPrimaryKeyRelatedField(
-        queryset=PrivateKey.objects
+    recipient_public_key = MyRelationField(
+        queryset=UserKeys.objects
     )
-    signing_key = serializers.PrimaryKeyRelatedField(
-        queryset=PrivateKey.objects.all()
+    signing_key = AllOthersRelationField(
+        queryset=UserKeys.objects
     )
     content = serializers.HiddenField(default='')
 

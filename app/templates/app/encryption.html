@@ -9,6 +9,14 @@
     <input type="submit" value="{{action|capfirst}}" />
 </form>
 
+<script>
+    $(document).ready(function(){
+        $('.form-group select option').each(function(){
+            $(this).text($(this).attr('value'));
+        })
+    });
+</script>
+
 {%endwith%}
 
 {%endblock%}

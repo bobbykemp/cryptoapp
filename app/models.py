@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ModelForm
 from django.contrib.auth.models import User
 from Crypto.PublicKey import RSA
 import uuid
@@ -14,7 +15,7 @@ class PrivateKey(models.Model):
 
 # accessed by user.userkeys
 class UserKeys(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, unique=True)
     # the private key of a keypair that any messages will be signed with
     signing_key = models.ForeignKey(PrivateKey, default=None, on_delete=models.SET_DEFAULT, related_name='signing_key', blank=True, null=True)
     # the private key of a keypair that will be used for message encryption
@@ -25,10 +26,10 @@ class Hash(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class Message(models.Model):
-    content = models.FileField()
+    content = models.TextField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='message_owner')
-    recipient_public_key = models.FileField()
+    recipient_public_key = models.ForeignKey(UserKeys, on_delete=models.CASCADE, blank=True, null=True, related_name='message_key')
     file_to_decrypt = models.FileField()
     signed = models.BooleanField(default=False)
-    signing_key = models.ForeignKey(PrivateKey, on_delete=models.CASCADE, blank=True, null=True)
+    signing_key = models.ForeignKey(UserKeys, on_delete=models.CASCADE, blank=True, null=True, related_name='sign_key')
 

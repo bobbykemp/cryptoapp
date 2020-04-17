@@ -9,7 +9,8 @@
         <thead>
         <tr>
           <th scope="col">Username</th>
-          <th scope="col"></th>
+          <th scope="col">This User's Messaging Public Key</th>
+          <th scope="col">This User's Signing Key</th>
         </tr>
         </thead>
         <tbody id="key-table-body">
@@ -31,12 +32,16 @@
         $.each(data, function(index){
           var username = data[index]['user']['username'];
           var id = data[index]['messaging_key'];
+          var sign_id = data[index]['signing_key'];
           if (username != '{{request.user.username}}'){
             $('#key-table-body').append(`
               <tr>
                 <td>${username}</td>
                 <td>
-                  <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
+                  <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download</a>
+                </td>
+                <td>
+                  <a class="btn btn-light" href="/api/private-keys/${sign_id}/get_public_key_as_file/">Download</a>
                 </td>
               </tr>
             `);

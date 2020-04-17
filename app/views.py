@@ -47,10 +47,6 @@ class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     serializer_class = UserKeysSerializer
     lookup_field = 'user'
 
-    # def get_queryset(self):
-    #     return UserKeys.objects.filter(user=self.request.user)
-
-
 class CreateUserView(FormView):
     template_name = 'registration/signup.html' 
     form_class = UserCreationForm
@@ -71,7 +67,6 @@ class HashViewSet(viewsets.GenericViewSet):
         return JsonResponse({
             'Hashed_message': SHA256.new(bytes(content, 'utf-8')).hexdigest()
         })
-
 
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
@@ -150,19 +145,32 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         if request.method == 'GET':
             serializer = self.get_serializer_class()
-            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
+            return Response(
+                {
+                    'serializer': 
+                    serializer(
+                        context={'request': request}
+                    ),
+                    'action': self.action
+                }
+            )
 
         # plaintext from user
         data = request.data['content'].encode('utf-8')
         # did user request a signature
-        signed = request.data['signed']
+        try:
+            signed = request.data['signed']
+        except:
+            signed = None
+
 
         # public key of the recipient to encrypt this message with
         # can access anyone's public key via a reference to their private key
         # this protect's the private key while also simplifying the database schema by
         # one model
-        recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_private_key']) \
-                                                 .get_public_key()
+        recipient_public_key = UserKeys.objects.get(user__username=request.data['recipient_public_key']).messaging_key.get_public_key()
+        # recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_public_key']) \
+        #                                          .get_public_key()
         public_key = RSA.import_key(recipient_public_key)
 
         # randomly-generate session key for encryption
@@ -171,7 +179,8 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # private key of the _sender_ to sign this message with
         # signing with the sender's private key means that
         # the reciever can verify the signature with the signer's public key
-        signing_key = PrivateKey.objects.get(pk=request.data['signing_key']).content
+        signing_key = UserKeys.objects.get(user__username=request.data['recipient_public_key']).signing_key.content
+        # signing_key = PrivateKey.objects.get(pk=request.data['signing_key']).content
         private_key = RSA.import_key(signing_key)
 
         # hash of plaintext for signature
@@ -224,7 +233,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # who own's the private key can decrypt a message intended
         # for them
         recipient_private_key = PrivateKey.objects.filter(owner=request.user) \
-                                                  .get(pk=request.data['recipient_private_key']) \
+                                                  .get(pk=request.data['recipient_public_key']) \
                                                   .content
         private_key = RSA.import_key(recipient_private_key)
 
