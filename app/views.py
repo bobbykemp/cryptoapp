@@ -138,22 +138,9 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Message.objects.filter(owner=self.request.user)
 
-    @action(detail=False, methods=['get', 'post'])
+    @action(detail=False, methods=['post'])
     def encrypt(self, request):
-        self.template_name = 'app/encryption.html'
         parser_classes = [FileUploadParser]
-
-        if request.method == 'GET':
-            serializer = self.get_serializer_class()
-            return Response(
-                {
-                    'serializer': 
-                    serializer(
-                        context={'request': request}
-                    ),
-                    'action': self.action
-                }
-            )
 
         # plaintext from user
         data = request.data['content'].encode('utf-8')
@@ -163,14 +150,14 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         except:
             signed = None
 
-
         # public key of the recipient to encrypt this message with
         # can access anyone's public key via a reference to their private key
         # this protect's the private key while also simplifying the database schema by
         # one model
-        recipient_public_key = UserKeys.objects.get(user__username=request.data['recipient_public_key']).messaging_key.get_public_key()
-        # recipient_public_key = PrivateKey.objects.get(pk=request.data['recipient_public_key']) \
-        #                                          .get_public_key()
+        recipient_public_key = UserKeys.objects.get(messaging_key__secure_id=request.data['recipient_public_key']) \
+                                                    .messaging_key \
+                                                    .get_public_key()
+
         public_key = RSA.import_key(recipient_public_key)
 
         # randomly-generate session key for encryption
@@ -179,8 +166,9 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # private key of the _sender_ to sign this message with
         # signing with the sender's private key means that
         # the reciever can verify the signature with the signer's public key
-        signing_key = UserKeys.objects.get(user__username=request.data['recipient_public_key']).signing_key.content
-        # signing_key = PrivateKey.objects.get(pk=request.data['signing_key']).content
+        signing_key = UserKeys.objects.get(user=request.user) \
+                                                    .signing_key \
+                                                    .content
         private_key = RSA.import_key(signing_key)
 
         # hash of plaintext for signature
@@ -208,23 +196,22 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         return FileResponse(file_out, as_attachment=True)
 
 
-    @action(detail=False, methods=['get','post'])
+    @action(detail=False, methods=['post'])
     def decrypt(self, request):
         serializer = DecryptionSerializer
-        self.template_name = 'app/encryption.html'
-
-        if request.method == 'GET':
-            serializer = self.get_serializer_class()
-            return Response({'serializer': serializer(context={'request': request}), 'action': self.action})
 
         # encrypted file to decrypt, may or may not
         # be signed
         file_in = request.data['file_to_decrypt']
+        print(file_in)
         # whether or not the file is signed
-        signed = request.data['signed']
-        # RSA public key of sender to verify signature agains
-        signing_public_key = PrivateKey.objects.get(pk=request.data['signing_key']).get_public_key()
-        public_key = RSA.import_key(signing_public_key)
+        try:
+            signed = request.data['signed']
+            signing_public_key = UserKeys.objects.get(signing_key__secure_id=request.data['signing_key']).get_public_key()
+            # RSA public key of sender to verify signature agains
+            public_key = RSA.import_key(signing_public_key)
+        except:
+            signed = None
 
         # private key of recipient to decrypt message with
         # have to be this key's owner to decrypt
@@ -232,9 +219,9 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # private key's value; this ensure's only someone
         # who own's the private key can decrypt a message intended
         # for them
-        recipient_private_key = PrivateKey.objects.filter(owner=request.user) \
-                                                  .get(pk=request.data['recipient_public_key']) \
-                                                  .content
+        recipient_private_key = UserKeys.objects.get(user=request.user) \
+                                                    .messaging_key \
+                                                    .content
         private_key = RSA.import_key(recipient_private_key)
 
         if signed:
