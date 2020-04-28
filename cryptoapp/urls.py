@@ -26,6 +26,7 @@ router.register(r'keys', PrivateKeyViewset, basename="privatekey")
 router.register(r'message', MessageViewSet, basename="message")
 router.register(r'hash', HashViewSet, basename="hash")
 router.register(r'user-keys', UserKeysViewSet, basename="user-key")
+router.register(r'sign', SignatureViewSet, basename="sign")
 
 urlpatterns = [
     path('api/',            include(router.urls)),

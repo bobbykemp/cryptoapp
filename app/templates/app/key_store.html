@@ -187,6 +187,9 @@
                 <td>
                   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#decryptModal" onClick="setLine('${msg_key_id}', '${sign_id}')">Decrypt a Message from This User</button>
                 </td>
+                <td>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="checkSignature" onClick="setLine('${msg_key_id}', '${sign_id}')">Check a Signature from This User</button>
+                </td>
               </tr>
             `);
           }

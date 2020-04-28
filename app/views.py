@@ -33,6 +33,42 @@ def createUserKeys(sender, **kwargs):
         user=kwargs['instance']
     )
 
+def sign(request, data):
+    # private key of the _sender_ to sign this message with
+    # signing with the sender's private key means that
+    # the reciever can verify the signature with the signer's public key
+    signing_key = UserKeys.objects.get(user=request.user) \
+                                                .signing_key \
+                                                .content
+    private_key = RSA.import_key(signing_key)
+
+    # hash of plaintext for signature
+    hash_ = SHA256.new(data)
+    signature = pkcs1_15.new(private_key).sign(hash_)
+
+    return signature
+
+def verify_signature(request, data, signature):
+    signing_public_key = UserKeys.objects.get(signing_key__secure_id=request.data['signing_key']) \
+                                                .signing_key \
+                                                .get_public_key()
+    # RSA public key of sender to verify signature agains
+    public_key = RSA.import_key(signing_public_key)
+
+    # take hash of message and seek back to file start
+    hash_ = SHA256.new(data)
+
+    is_sig_valid = 'message not signed'
+
+    try:
+        pkcs1_15.new(public_key).verify(hash_, signature)
+        is_sig_valid = 'signature is valid'
+    except(ValueError, TypeError):
+        is_sig_valid = 'signature is INVALID'
+
+    return is_sig_valid
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -67,6 +103,53 @@ class HashViewSet(viewsets.GenericViewSet):
         return JsonResponse({
             'Hashed_message': SHA256.new(bytes(content, 'utf-8')).hexdigest()
         })
+
+class SignatureViewSet(viewsets.ModelViewSet):
+    '''
+    Signs a file using the pkcs1_15 algorithm.
+
+    Returns the file and it's signature (signature is 256 bytes in length)
+    '''
+    serializer_class = SignatureSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        return Signature.objects.filter(owner=self.request.user)
+
+    def create(self, request):
+        parser_classes = [FileUploadParser]
+
+        data = request.data['file_to_sign'].read()
+        
+        signature = sign(request, data)
+
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        [file_out.write(x) for x in (signature, data)]
+
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True)
+
+    @action(detail=False, methods=['post'])
+    def verify(self, request):
+        parser_classes = [FileUploadParser]
+
+        file = request.data['file_to_sign']
+
+        data, signature = \
+            [file.read(x) for x in (256, -1)]
+
+        is_sig_valid = verify_signature(request, data, signature)
+
+        return JsonResponse({
+            'File contents': file.read().decode("utf-8"),
+            'Signature status': is_sig_valid
+        })
+
 
 class PrivateKeyViewset(viewsets.ModelViewSet):
     serializer_class = PrivateKeySerializer
@@ -150,7 +233,6 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         except:
             signed = None
 
-
         # public key of the recipient to encrypt this message with
         # can access anyone's public key via a reference to their private key
         # this protect's the private key while also simplifying the database schema by
@@ -164,17 +246,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # randomly-generate session key for encryption
         session_key = get_random_bytes(16)
 
-        # private key of the _sender_ to sign this message with
-        # signing with the sender's private key means that
-        # the reciever can verify the signature with the signer's public key
-        signing_key = UserKeys.objects.get(user=request.user) \
-                                                    .signing_key \
-                                                    .content
-        private_key = RSA.import_key(signing_key)
-
-        # hash of plaintext for signature
-        hash_ = SHA256.new(data)
-        signature = pkcs1_15.new(private_key).sign(hash_)
+        signature = sign(request, data)
 
         ciper_rrsa = PKCS1_OAEP.new(public_key)
         enc_session_key = ciper_rrsa.encrypt(session_key)
@@ -185,10 +257,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # 'w+b' mode by default
         file_out = TemporaryFile()
 
-        # [print('{} : {}'.format(x, len(x))) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext)]
-
         if signed:
-            print(signed)
             [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext) ]
         else:
             [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]
@@ -211,12 +280,6 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         except:
             signed = None
 
-        signing_public_key = UserKeys.objects.get(signing_key__secure_id=request.data['signing_key']) \
-                                                .signing_key \
-                                                .get_public_key()
-        # RSA public key of sender to verify signature agains
-        public_key = RSA.import_key(signing_public_key)
-
         # private key of recipient to decrypt message with
         # have to be this key's owner to decrypt
         # on decryption, first filter by key owner then get the 
@@ -229,11 +292,9 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         private_key = RSA.import_key(recipient_private_key)
 
         if signed:
-            print(signed)
             enc_session_key, nonce, tag, signature, ciphertext = \
                 [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, 256, -1) ]
         else:
-            print('HERE INSTEAD')
             enc_session_key, nonce, tag, ciphertext = \
                 [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
 
@@ -245,17 +306,8 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
         data = cipher_aes.decrypt_and_verify(ciphertext, tag)
 
-        # take hash of message and seek back to file start
-        hash_ = SHA256.new(data)
-
-        is_sig_valid = 'message not signed'
-
         if signed:
-            try:
-                pkcs1_15.new(public_key).verify(hash_, signature)
-                is_sig_valid = 'signature is valid'
-            except(ValueError, TypeError):
-                is_sig_valid = 'signature is INVALID'
+            is_sig_valid = verify_signature(request, data, signature)
 
         return JsonResponse({
             'Decrypted_message': data.decode("utf-8"),

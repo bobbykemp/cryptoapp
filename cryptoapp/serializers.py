@@ -71,11 +71,17 @@ class UserKeysSerializer(serializers.ModelSerializer):
         model = UserKeys
         fields = '__all__'
 
-class HashSerializer(serializers.HyperlinkedModelSerializer):
+class HashSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Hash
         fields = '__all__'
+
+class SignatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Signature
+        fields = '__all__'
+        lookup_field = 'user'
 
 class MessageSerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(read_only=True)
