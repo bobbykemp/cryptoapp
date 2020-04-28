@@ -3,3 +3,4 @@
 .vscode/
 media/
 **/static/admin/
+node_modules

@@ -37,4 +37,5 @@ urlpatterns = [
     path('my-keys/',        TemplateView.as_view(template_name="app/keys.html")),
     path('public-keys/',    TemplateView.as_view(template_name="app/key_store.html")),
     path('',                TemplateView.as_view(template_name="app/base.html")),
+    # path('',                index),
 ]

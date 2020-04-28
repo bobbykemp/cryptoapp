@@ -68,6 +68,8 @@ def verify_signature(request, data, signature):
 
     return is_sig_valid
 
+# def index(request):
+#     return render(request, 'index.html')
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -171,7 +173,8 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def get_public_key_as_file(self, request, secure_id=None):
-        public_key = get_object_or_404(PrivateKey, secure_id=secure_id).get_public_key()
+        public_key = get_object_or_404(PrivateKey, secure_id=secure_id) \
+                                        .get_public_key() \
 
         # 'w+b' mode by default
         file_out = TemporaryFile()
@@ -179,7 +182,7 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
         file_out.write(public_key)
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True)
+        return FileResponse(file_out, as_attachment=True, filename=f'{request.user}_public_key.txt')
 
     @action(detail=True, methods=['get'])
     def get_private_key_as_file(self, request, secure_id=None):
@@ -194,7 +197,7 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
         file_out.write(private_key)
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True)
+        return FileResponse(file_out, as_attachment=True, filename=f'{request.user}_private_key.txt')
 
 
 class MessageViewSet(viewsets.ReadOnlyModelViewSet):
@@ -241,6 +244,10 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
                                                     .messaging_key \
                                                     .get_public_key()
 
+        recip_uname = UserKeys.objects.get(messaging_key__secure_id=request.data['recipient_public_key']) \
+                                                    .user \
+                                                    .username
+
         public_key = RSA.import_key(recipient_public_key)
 
         # randomly-generate session key for encryption
@@ -264,7 +271,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True)
+        return FileResponse(file_out, as_attachment=True, filename=f'encrypted_message_to_{recip_uname}')
 
 
     @action(detail=False, methods=['post'])
@@ -308,6 +315,8 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         if signed:
             is_sig_valid = verify_signature(request, data, signature)
+        else:
+            is_sig_valid = 'No signature'
 
         return JsonResponse({
             'Decrypted_message': data.decode("utf-8"),

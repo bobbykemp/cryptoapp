@@ -26,6 +26,55 @@
   </div>
 </div>
 
+  <!-- Sign Modal -->
+  <div
+    class="modal fade"
+    id="inputModal"
+    tabindex="-1"
+    role="dialog"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">
+            Sign a File with This Key
+          </h5>
+          <button
+            type="button"
+            class="close"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form
+          action="/api/sign/"
+          method="post"
+        >
+          <div class="modal-body">
+            {%csrf_token%}
+            <div class="form-group">
+              <label for="content">File to Decrypt</label>
+              <input type="file" name="file_to_sign">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
 <script>
 
   var getKeys = function(){
@@ -71,9 +120,9 @@
             </tr>
           `);
         });
+        setChecks();
       }
     });
-    setChecks();
   };
 
   var setChecks = function(){
@@ -106,7 +155,7 @@
       success: function(){
         getKeys();
       }
-    })
+    });
   };
 
   var destroyKey = function(key_id){
