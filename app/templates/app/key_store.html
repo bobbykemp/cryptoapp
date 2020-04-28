@@ -121,8 +121,8 @@
             </div>
             <input
               type="hidden"
-              id="recip-key-id"
-              name="recipient_public_key"
+              id="sign-key-id"
+              name="signing_key"
             />
           </div>
           <div class="modal-footer">
@@ -151,7 +151,7 @@
   };
 
   var setKeyIDdecrypt = function () {
-    $("#recip-key-id").val(sign_key_id);
+    $("#sign-key-id").val(sign_key_id);
     return true;
   };
 
@@ -169,23 +169,23 @@
         console.log(data);
         $.each(data, function (index) {
           var username = data[index]["user"]["username"];
-          var id = data[index]["messaging_key"];
+          var msg_key_id = data[index]["messaging_key"];
           var sign_id = data[index]["signing_key"];
           if (username != "{{request.user.username}}") {
             $("#key-table-body").append(`
               <tr>
                 <td>${username}</td>
                 <td>
-                  <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download</a>
+                  <a class="btn btn-light" href="/api/keys/${msg_key_id}/get_public_key_as_file/">Download</a>
                 </td>
                 <td>
-                  <a class="btn btn-light" href="/api/private-keys/${sign_id}/get_public_key_as_file/">Download</a>
+                  <a class="btn btn-light" href="/api/keys/${sign_id}/get_public_key_as_file/">Download</a>
                 </td>
                 <td>
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#inputModal" onClick="setLine('${id}', '${sign_id}')">Encrypt a Message for This User</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#inputModal" onClick="setLine('${msg_key_id}', '${sign_id}')">Encrypt a Message for This User</button>
                 </td>
                 <td>
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#decryptModal" onClick="setLine('${id}', '${sign_id}')">Decrypt a Message from This User</button>
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#decryptModal" onClick="setLine('${msg_key_id}', '${sign_id}')">Decrypt a Message from This User</button>
                 </td>
               </tr>
             `);

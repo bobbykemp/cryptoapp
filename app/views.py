@@ -150,6 +150,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         except:
             signed = None
 
+
         # public key of the recipient to encrypt this message with
         # can access anyone's public key via a reference to their private key
         # this protect's the private key while also simplifying the database schema by
@@ -187,6 +188,7 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # [print('{} : {}'.format(x, len(x))) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext)]
 
         if signed:
+            print(signed)
             [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, signature, ciphertext) ]
         else:
             [ file_out.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]
@@ -203,15 +205,17 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         # encrypted file to decrypt, may or may not
         # be signed
         file_in = request.data['file_to_decrypt']
-        print(file_in)
         # whether or not the file is signed
         try:
             signed = request.data['signed']
-            signing_public_key = UserKeys.objects.get(signing_key__secure_id=request.data['signing_key']).get_public_key()
-            # RSA public key of sender to verify signature agains
-            public_key = RSA.import_key(signing_public_key)
         except:
             signed = None
+
+        signing_public_key = UserKeys.objects.get(signing_key__secure_id=request.data['signing_key']) \
+                                                .signing_key \
+                                                .get_public_key()
+        # RSA public key of sender to verify signature agains
+        public_key = RSA.import_key(signing_public_key)
 
         # private key of recipient to decrypt message with
         # have to be this key's owner to decrypt
@@ -225,9 +229,11 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
         private_key = RSA.import_key(recipient_private_key)
 
         if signed:
+            print(signed)
             enc_session_key, nonce, tag, signature, ciphertext = \
-                [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, public_key.size_in_bytes(), -1) ]
+                [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, 256, -1) ]
         else:
+            print('HERE INSTEAD')
             enc_session_key, nonce, tag, ciphertext = \
                 [ file_in.read(x) for x in (private_key.size_in_bytes(), 16, 16, -1) ]
 

@@ -21,7 +21,7 @@
 
   $(document).ready(function() {
     $.ajax({
-      url: '/api/private-keys/',
+      url: '/api/keys/',
       dataType: 'json',
       success: function(data){
         $.each(data, function(index){
@@ -31,10 +31,10 @@
             <tr>
               <td>${id}</td>
               <td>
-                <a class="btn btn-light" href="/api/private-keys/${id}/get_private_key_as_file/">Download Private Key</a>
+                <a class="btn btn-light" href="/api/keys/${id}/get_private_key_as_file/">Download Private Key</a>
               </td>
               <td>
-                <a class="btn btn-light" href="/api/private-keys/${id}/get_public_key_as_file/">Download Public Key</a>
+                <a class="btn btn-light" href="/api/keys/${id}/get_public_key_as_file/">Download Public Key</a>
               </td>
             </tr>
           `);
@@ -46,7 +46,7 @@
       var id = $(this).attr('id');
       var type = $(this).attr('keytype');
       $.ajax({
-        url: '/api/private-keys/' + id + '/get_' + type + '_key_as_file/',
+        url: '/api/keys/' + id + '/get_' + type + '_key_as_file/',
         method: 'POST',
         dataType: 'octet-stream',
         beforeSend(xhr, settings) {

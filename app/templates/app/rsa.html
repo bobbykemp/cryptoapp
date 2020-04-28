@@ -5,12 +5,12 @@
 </head>
 
 <h2>Private Keys</h2>
-<form action="/private-keys/" method="post">
+<form action="/keys/" method="post">
     {% csrf_token %}
     <label for="gen-priv">Generate a new RSA private key</label>
     <input id="gen-priv" type="submit" value="Generate">
 </form>
-<form action="/private-keys/" method="get">
+<form action="/keys/" method="get">
     {% csrf_token %}
     <label for="get-priv">Get all Private Keys from the Database</label>
     <input id="get-priv" type="submit" value="Get">

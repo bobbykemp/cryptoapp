@@ -22,7 +22,7 @@ from app.views import *
 
 router = routers.DefaultRouter()
 router.register(r'user', UserViewSet, basename="user")
-router.register(r'private-keys', PrivateKeyViewset, basename="privatekey")
+router.register(r'keys', PrivateKeyViewset, basename="privatekey")
 router.register(r'message', MessageViewSet, basename="message")
 router.register(r'hash', HashViewSet, basename="hash")
 router.register(r'user-keys', UserKeysViewSet, basename="user-key")
