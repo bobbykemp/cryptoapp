@@ -80,6 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.save(
             owner=self.request.user,
         )
+    
 
 class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     queryset = UserKeys.objects.all()
@@ -138,7 +139,7 @@ class SignatureViewSet(viewsets.ModelViewSet):
 
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True, filename=f'{file_name}_signed{file_ext}')
+        return FileResponse(file_out, as_attachment=True, filename=f'{file_name}{file_ext}.signed')
 
     @action(detail=False, methods=['post'])
     def verify(self, request):
@@ -152,9 +153,19 @@ class SignatureViewSet(viewsets.ModelViewSet):
 
         is_sig_valid = verify_signature(request, data, signature)
 
-        return JsonResponse({
-            'Signature status': is_sig_valid
-        })
+        if not is_sig_valid:
+            return JsonResponse({
+                'Signature status': is_sig_valid
+            })
+
+        # 'w+b' mode by default
+        file_out = TemporaryFile()
+
+        file_out.write(data)
+
+        file_out.seek(0)
+
+        return FileResponse(file_out, as_attachment=True, filename=f'{file_name}')
 
 
 class PrivateKeyViewset(viewsets.ModelViewSet):

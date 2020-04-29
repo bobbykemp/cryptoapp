@@ -1,67 +1,49 @@
 {% extends "app/base.html" %} {% block content %} {%load rest_framework%}
 
 <div class="container">
+
   <div class="row">
     <div class="col">
       <ul class="list-group" id="key-table-body"></ul>
     </div>
   </div>
 
+  <div class="row">
+    <div class="col">
+      <div class="ui-widget">
+        <label for="usernames">Users: </label>
+        <input id="usernames">
+      </div>
+    </div>
+  </div>
+
   <!-- Encrypt Modal -->
-  <div
-    class="modal fade"
-    id="inputModal"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="inputModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLongTitle">
             Encrypt a Message for This User
           </h5>
-          <button
-            type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-label="Close"
-          >
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form
-          action="/api/message/encrypt/"
-          method="post"
-          onsubmit="setKeyID();"
-        >
+        <form action="/api/message/encrypt/" method="post" onsubmit="setKeyID();">
           <div class="modal-body">
             {%csrf_token%}
             <div class="form-group">
               <label for="content">Message</label>
-              <textarea
-                class="form-control"
-                id="content"
-                name="content"
-                rows="4"
-              ></textarea>
+              <textarea class="form-control" id="content" name="content" rows="4"></textarea>
             </div>
             <div class="form-group">
               <label for="signed">Sign Message</label>
               <input type="checkbox" id="signed" name="signed" />
             </div>
-            <input
-              type="hidden"
-              id="recip-key-id"
-              name="recipient_public_key"
-            />
+            <input type="hidden" id="recip-key-id" name="recipient_public_key" />
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
               Close
             </button>
             <button type="submit" class="btn btn-primary">Save changes</button>
@@ -72,34 +54,18 @@
   </div>
 
   <!-- Decrypt Modal -->
-  <div
-    class="modal fade"
-    id="decryptModal"
-    tabindex="-1"
-    role="dialog"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="decryptModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="decryptModalTitle">
             Decrypt a Message from This User
           </h5>
-          <button
-            type="button"
-            class="close"
-            data-dismiss="modal"
-            aria-label="Close"
-          >
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form
-          action="/api/message/decrypt/"
-          method="post"
-          onsubmit="setKeyIDdecrypt();"
-          enctype="multipart/form-data"
-        >
+        <form action="/api/message/decrypt/" method="post" onsubmit="setKeyIDdecrypt();" enctype="multipart/form-data">
           <div class="modal-body">
             {%csrf_token%}
             <div class="form-group">
@@ -113,11 +79,7 @@
             <input type="hidden" id="sign-key-id" name="signing_key" />
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
               Close
             </button>
             <button type="submit" class="btn btn-primary">Save changes</button>
@@ -129,34 +91,18 @@
 </div>
 
 <!-- Sign Modal -->
-<div
-  class="modal fade"
-  id="checkSignature"
-  tabindex="-1"
-  role="dialog"
-  aria-hidden="true"
->
+<div class="modal fade" id="checkSignature" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLongTitle">
           Sign a File with This Key
         </h5>
-        <button
-          type="button"
-          class="close"
-          data-dismiss="modal"
-          aria-label="Close"
-        >
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form
-        action="/api/sign/verify/"
-        method="post"
-        enctype="multipart/form-data"
-        onsubmit="setKeyIDverif();"
-      >
+      <form action="/api/sign/verify/" method="post" enctype="multipart/form-data" onsubmit="setKeyIDverif();">
         {%csrf_token%}
         <div class="modal-body">
           <div class="form-group">
@@ -179,6 +125,35 @@
 <script>
   var messaging_key_id,
     sign_key_id = null;
+
+  $(function () {
+    $("#usernames").autocomplete({
+      source: function (request, response) {
+        $.ajax({
+          url: "/api/user-keys/",
+          dataType: "json",
+          data: {
+            term: request.term
+          },
+          success: function (data) {
+            console.log(data);
+            response($.map(data, function (item) {
+              return {
+                value: item.user.username,
+                messaging_key: item.messaging_key,
+                signing_key: item.signing_key
+              }
+            }));
+          }
+        });
+      },
+      minLength: 2,
+      select: function (event, ui) {
+        console.log("Selected: " + ui.item.value + " aka " + ui.item.messaging_key);
+      }
+    });
+  });
+
 
   var setKeyID = function () {
     $("#recip-key-id").val(messaging_key_id);
