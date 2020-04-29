@@ -49,6 +49,11 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
             'username',
         ]
 
+class SearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Search
+        fields = '__all__'
+
 class UserKeysSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 

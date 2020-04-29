@@ -35,7 +35,7 @@ urlpatterns = [
     path('signup/',         CreateUserView.as_view()),
     path('rsa/',            TemplateView.as_view(template_name="app/rsa.html")),
     path('my-keys/',        TemplateView.as_view(template_name="app/keys.html")),
-    path('public-keys/',    TemplateView.as_view(template_name="app/key_store.html")),
+    path('public-keys/',    TemplateView.as_view(template_name="app/key_store_card.html")),
     path('',                TemplateView.as_view(template_name="app/base.html")),
     # path('',                index),
 ]

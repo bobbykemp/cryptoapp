@@ -87,6 +87,19 @@ class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     serializer_class = UserKeysSerializer
     lookup_field = 'user'
 
+    @action(detail=False, methods=['get'])
+    def search_usernames(self, request):
+        vals = []
+        for key in UserKeys.objects.filter(user__username__icontains=request.query_params['term']):
+            vals.append({
+                'label': key.user.username,
+                'value': key.user.username,
+                'messaging_key_id': key.messaging_key.secure_id,
+                'signing_key_id': key.signing_key.secure_id
+            })
+        serializer = SearchSerializer(vals, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
 class CreateUserView(FormView):
     template_name = 'registration/signup.html' 
     form_class = UserCreationForm
@@ -188,8 +201,8 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def get_public_key_as_file(self, request, secure_id=None):
-        public_key = get_object_or_404(PrivateKey, secure_id=secure_id) \
-                                        .get_public_key() \
+        key = get_object_or_404(PrivateKey, secure_id=secure_id)
+        public_key = key.get_public_key()
 
         # 'w+b' mode by default
         file_out = TemporaryFile()
@@ -197,7 +210,7 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
         file_out.write(public_key)
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True, filename=f'{request.user}_public_key.txt')
+        return FileResponse(file_out, as_attachment=True, filename=f'{key.owner.username}_public_key.txt')
 
     @action(detail=True, methods=['get'])
     def get_private_key_as_file(self, request, secure_id=None):

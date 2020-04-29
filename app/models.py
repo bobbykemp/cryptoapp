@@ -25,6 +25,12 @@ class Hash(models.Model):
     content = models.TextField()
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
+class Search(models.Model):
+    label = models.CharField(max_length=100)
+    value = models.CharField(max_length=100)
+    messaging_key_id = models.CharField(max_length=100)
+    signing_key_id = models.CharField(max_length=100)
+
 class Signature(models.Model):
     file_to_sign = models.FileField()
     signing_key = models.ForeignKey(UserKeys, on_delete=models.CASCADE)

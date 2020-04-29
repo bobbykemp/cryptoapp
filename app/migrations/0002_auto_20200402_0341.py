@@ -6,10 +6,10 @@ from django.contrib.auth.models import User
 import datetime
 
 def create_test_user(apps, schema_editor):
-    user = User.objects.create_user('test', password='test', email="test@test.com", last_login=datetime.datetime.now())
-
-def create_test_user_2(apps, schema_editor):
-    user = User.objects.create_user('test2', password='test2', email="test2@test.com", last_login=datetime.datetime.now())
+    user = User.objects.create_user('me', password='test', email="test@test.com", last_login=datetime.datetime.now())
+    User.objects.create_user('bob', password='test', email="bob@test.com", last_login=datetime.datetime.now())
+    User.objects.create_user('alice', password='test', email="alice@test.com", last_login=datetime.datetime.now())
+    User.objects.create_user('jay', password='test', email="jay@test.com", last_login=datetime.datetime.now())
 
 class Migration(migrations.Migration):
 
@@ -19,5 +19,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(create_test_user),
-        migrations.RunPython(create_test_user_2),
     ]
