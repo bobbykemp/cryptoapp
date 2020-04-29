@@ -9,6 +9,14 @@
     </div>
   </div>
 
+  <div class="row pb-3">
+    <div class="col">
+      <button type="button" class="btn btn-primary btn-dark" data-toggle="modal" data-target="#signModal" onClick="setLine('${msg_key_id}', '${sign_id}')">
+        Sign File
+      </button>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col">
         <table class="table table-dark">
@@ -29,7 +37,7 @@
   <!-- Sign Modal -->
   <div
     class="modal fade"
-    id="inputModal"
+    id="signModal"
     tabindex="-1"
     role="dialog"
     aria-hidden="true"
@@ -52,11 +60,12 @@
         <form
           action="/api/sign/"
           method="post"
+          enctype="multipart/form-data"
         >
+        {%csrf_token%}
           <div class="modal-body">
-            {%csrf_token%}
             <div class="form-group">
-              <label for="content">File to Decrypt</label>
+              <label for="content">File to Sign</label>
               <input type="file" name="file_to_sign">
             </div>
           </div>
@@ -99,6 +108,13 @@
               </td>
               <td>
                 <a class="btn btn-light" href="/api/keys/${id}/get_public_key_as_file/">Download Public Key</a>
+              </td>
+              <td>
+                <div class="btn-group" data-toggle="buttons" onclick="setKey('signing', '${id}');">
+                  <label class="btn btn-light">
+                    <input type="radio" name="signing" pk="${id}" id="signing-${id}"/> Set This as Signing Key
+                  </label>
+                </div>
               </td>
               <td>
                 <div class="btn-group" data-toggle="buttons" onclick="setKey('signing', '${id}');">

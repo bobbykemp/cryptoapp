@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from tempfile import TemporaryFile
 
@@ -58,13 +59,13 @@ def verify_signature(request, data, signature):
     # take hash of message and seek back to file start
     hash_ = SHA256.new(data)
 
-    is_sig_valid = 'message not signed'
+    is_sig_valid = None
 
     try:
         pkcs1_15.new(public_key).verify(hash_, signature)
-        is_sig_valid = 'signature is valid'
+        is_sig_valid = True
     except(ValueError, TypeError):
-        is_sig_valid = 'signature is INVALID'
+        is_sig_valid = False
 
     return is_sig_valid
 
@@ -120,11 +121,14 @@ class SignatureViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Signature.objects.filter(owner=self.request.user)
 
+
     def create(self, request):
         parser_classes = [FileUploadParser]
 
-        data = request.data['file_to_sign'].read()
-        
+        file = request.data['file_to_sign']
+        file_name, file_ext = os.path.splitext(file.name)
+        data = file.read()
+
         signature = sign(request, data)
 
         # 'w+b' mode by default
@@ -134,21 +138,21 @@ class SignatureViewSet(viewsets.ModelViewSet):
 
         file_out.seek(0)
 
-        return FileResponse(file_out, as_attachment=True)
+        return FileResponse(file_out, as_attachment=True, filename=f'{file_name}_signed{file_ext}')
 
     @action(detail=False, methods=['post'])
     def verify(self, request):
         parser_classes = [FileUploadParser]
 
         file = request.data['file_to_sign']
+        file_name, file_ext = os.path.splitext(file.name)
 
-        data, signature = \
+        signature, data = \
             [file.read(x) for x in (256, -1)]
 
         is_sig_valid = verify_signature(request, data, signature)
 
         return JsonResponse({
-            'File contents': file.read().decode("utf-8"),
             'Signature status': is_sig_valid
         })
 
