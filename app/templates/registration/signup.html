@@ -1,11 +1,75 @@
-{% extends "app/base.html" %}
+{% extends "app/base.html" %} {% block content %}
+<style>
+  .errorlist {
+    display: none;
+  }
+</style>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <div class="d-flex justify-content-center my-4">
+        <div class="jumbotron">
+          <h4 class="H4">Create an account</h4>
+          <br />
+          <form action="/signup/" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table>
+              {{ form.as_p }}
+            </table>
+            <input type="submit" value="Submit" />
+          </form>
 
-{% block content %}
-<form action="/signup/" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <table>
-        {{ form.as_p }}
-    </table>
-    <input type="submit" value="Submit">
-</form>
+          {% if form.errors %}
+          <script type="text/javascript">
+            $(window).on("load", function () {
+              $("#exampleModal").modal("show");
+            });
+          </script>
+
+          <!-- Modal -->
+          <div
+            class="modal fade"
+            id="exampleModal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="exampleModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">
+                    Error...
+                  </h5>
+                </div>
+                <div class="modal-body">
+                  {% for field in form %} {% for error in field.errors %}
+                  <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                  </div>
+                  {% endfor %} {% endfor %} {% for error in form.non_field_errors %}
+                  <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                  </div>
+                  {% endfor %}
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-dismiss="modal"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

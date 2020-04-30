@@ -47,6 +47,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             'url',
             'username',
+            'email',
         ]
 
 class SearchSerializer(serializers.ModelSerializer):

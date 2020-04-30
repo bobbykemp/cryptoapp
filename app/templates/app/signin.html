@@ -1,0 +1,55 @@
+{%extends "app/base.html"%} {%load static%} {%block content%}
+
+<head>
+  <title>Sign In</title>
+</head>
+
+<!-- SignIn -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <div class="d-flex justify-content-center my-4">
+        <div class="jumbotron">
+          <h4 class="H4">Sign In</h4>
+          <br />
+          <form class="form-container" method="post" action="/api_auth/login/">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="Input">Email address</label>
+              <input
+                class="form-control textinput textInput"
+                id="id_username"
+                aria-describedby="emailHelp"
+                placeholder="Enter email"
+                name="username"
+              />
+              <small id="emailHelp" class="form-text text-muted"
+                >We'll never share your email with anyone else.
+              </small>
+            </div>
+            <div class="form-group">
+              <label for="Password">Password</label>
+              <input
+                type="password"
+                class="form-control textinput textInput"
+                id="id_password"
+                placeholder="Password"
+                name="password"
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fa fa-lock" aria-hidden="true"></i>&nbsp&nbspSign In
+            </button>
+            <br />
+            <h5><a href="">Forgot Password?</a></h5>
+            <hr />
+            <h5><a href="/signup/">Create an account.</a></h5>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{%endblock%}

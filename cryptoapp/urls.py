@@ -30,12 +30,11 @@ router.register(r'sign', SignatureViewSet, basename="sign")
 
 urlpatterns = [
     path('api/',            include(router.urls)),
-    path('api-auth/',       include('rest_framework.urls', namespace='rest_framework')),
-    path('accounts/',       include('django.contrib.auth.urls')),
+    path('api_auth/',       include('rest_framework.urls', namespace='rest_framework')),
+    path('signin/',         TemplateView.as_view(template_name='app/signin.html')), 
     path('signup/',         CreateUserView.as_view()),
-    path('rsa/',            TemplateView.as_view(template_name="app/rsa.html")),
-    path('my-keys/',        TemplateView.as_view(template_name="app/keys.html")),
-    path('public-keys/',    TemplateView.as_view(template_name="app/key_store_card.html")),
+    path('rsa/',            login_required(TemplateView.as_view(template_name="app/rsa.html"))),
+    path('my-keys/',        login_required(TemplateView.as_view(template_name="app/keys.html"))),
+    path('public-keys/',    login_required(TemplateView.as_view(template_name="app/key_store_card.html"))),
     path('',                TemplateView.as_view(template_name="app/base.html")),
-    # path('',                index),
 ]

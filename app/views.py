@@ -34,6 +34,16 @@ def createUserKeys(sender, **kwargs):
         user=kwargs['instance']
     )
 
+class CreateUserView(FormView):
+    template_name = 'app/signup.html'
+    form_class = UserCreationForm
+    success_url = '/'
+
+    def form_valid(self, form):
+        print('test')
+        form.save()
+        return super().form_valid(form)
+
 def sign(request, data):
     # private key of the _sender_ to sign this message with
     # signing with the sender's private key means that

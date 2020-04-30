@@ -173,6 +173,7 @@
     sign_key_id = s;
     $('#m-key').val(m);
     $('#s-key').val(s);
+    $("#sign-key-verif").val(s);
     $('#download-m-key').attr('href', '/api/keys/'+m+'/get_public_key_as_file/')
     $('#download-s-key').attr('href', '/api/keys/'+s+'/get_public_key_as_file/')
   };
