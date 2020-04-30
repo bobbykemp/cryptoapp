@@ -1,8 +1,8 @@
-{% extends "app/base.html" %} {% block content %} {%load rest_framework%}
+{%load rest_framework%}
 
 <div class="container">
-
-  {%block card%}{%endblock%}
+  
+  {%include "app/key_store_card.html"%}
 
   <!-- Encrypt Modal -->
   <div class="modal fade" id="inputModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -186,5 +186,3 @@
   })
 
 </script>
-
-{%endblock%}

@@ -34,6 +34,7 @@ urlpatterns = [
     path('signin/',         TemplateView.as_view(template_name='app/signin.html')), 
     path('signup/',         CreateUserView.as_view()),
     path('rsa/',            login_required(TemplateView.as_view(template_name="app/rsa.html"))),
+    path('app/',            login_required(TemplateView.as_view(template_name="app/app.html"))),
     path('my-keys/',        login_required(TemplateView.as_view(template_name="app/keys.html"))),
     path('public-keys/',    login_required(TemplateView.as_view(template_name="app/key_store_card.html"))),
     path('',                TemplateView.as_view(template_name="app/base.html")),

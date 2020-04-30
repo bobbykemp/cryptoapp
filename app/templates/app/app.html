@@ -1,0 +1,19 @@
+{%extends "app/base.html"%} {%load static%} {%block content%}
+
+<div class="container-fluid d-flex flex-column vh-100 overflow-hidden">
+    <div class="row flex-grow-1 overflow-hidden">
+        <div class="col mh-100 overflow-auto py-2">
+            {%include "app/keys.html"%}
+        </div>
+        <div class='col mh-100 overflow-auto'>
+            <div class='row flex-shrink-0'>
+                <div class="col mh-100 overflow-auto py-2">
+                    {%include "app/key_store.html"%}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{%endblock%}
