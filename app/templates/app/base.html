@@ -1,3 +1,4 @@
+{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +7,7 @@
     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>Really Cool Security Stuff</title>
+  <title>FancyDragon Key Manager</title>
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
     integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
@@ -21,44 +22,38 @@
 
 </head>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="/">DragonCrypt</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">
+    <img class="mx-2" src="{%static "fancy_dragon.png" %}" width="30" height="30" alt="">
+    FancyDragon
+  </a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
     aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="navbar">
     <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">
-          {%if not request.user.is_anonymous%}
-            {{request.user}}
-          {%endif%}
-        </a>
-      </li>
+      {%if user.is_anonymous%}
       <li class="nav-item">
         <a class="nav-link" href="/signup/">Sign Up</a>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
-          aria-haspopup="true" aria-expanded="false">
-          Profile
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-          <a class="dropdown-item" href="/signin/">Sign In</a>
-          <a class="dropdown-item" href="/accounts/logout/">Logout</a>
-        </div>
+      <li class="nav-item">
+          <a class="nav-link" href="/signin/">Sign In</a>
       </li>
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownKeys" data-toggle="dropdown" aria-haspopup="true"
-          aria-expanded="false">
-          Keys
-        </a>
-        <div class="dropdown-menu" aria-labelledby="navbarDropdownKeys">
-          <a class="dropdown-item" href="/my-keys/">My KeyPairs</a>
-          <a class="dropdown-item" href="/public-keys/">Public Keys</a>
-        </div>
+      {%else%}
+      <li class="nav-item">
+          <a class="nav-link" href="/api_auth/logout/">Logout</a>
       </li>
+      {%endif%}
+    </ul>
+  </div>
+  <div class="navbar-collapse collapse order-3 dual-collapse2">
+    <ul class="navbar-nav ml-auto">
+      {%if not user.is_anonymous%}
+        <li class="nav-item">
+          <a class="nav-link" href="#">Hello, {{request.user}}</a>
+        </li>
+      {%endif%}
     </ul>
   </div>
 </nav>

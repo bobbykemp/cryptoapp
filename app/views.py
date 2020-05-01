@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.core import serializers
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -100,15 +100,30 @@ class UserKeysViewSet(viewsets.ReadOnlyModelViewSet, UpdateModelMixin):
     @action(detail=False, methods=['get'])
     def search_usernames(self, request):
         vals = []
-        for key in UserKeys.objects.filter(user__username__icontains=request.query_params['term']):
-            vals.append({
-                'label': key.user.username,
-                'value': key.user.username,
-                'messaging_key_id': key.messaging_key.secure_id,
-                'signing_key_id': key.signing_key.secure_id
-            })
+        for key in UserKeys.objects.exclude(user=request.user) \
+                                .filter(user__username__icontains=request.query_params['term']):
+            kwargs = {}
+            try:
+                kwargs['label'] = key.user.username
+                kwargs['value'] = key.user.username
+            except AttributeError:
+                kwargs['label'] = None
+                kwargs['value'] = None
+
+            try:
+                kwargs['messaging_key_id'] = key.messaging_key.secure_id
+            except AttributeError:
+                kwargs['messaging_key_id'] = None
+            try:
+                kwargs['signing_key_id'] = key.signing_key.secure_id
+            except AttributeError:
+                kwargs['signing_key_id'] = None
+
+            vals.append(kwargs)
+
         serializer = SearchSerializer(vals, many=True)
         return JsonResponse(serializer.data, safe=False)
+
 
 class CreateUserView(FormView):
     template_name = 'registration/signup.html' 

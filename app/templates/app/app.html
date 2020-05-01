@@ -1,19 +1,247 @@
 {%extends "app/base.html"%} {%load static%} {%block content%}
 
 <div class="container-fluid d-flex flex-column vh-100 overflow-hidden">
-    <div class="row flex-grow-1 overflow-hidden">
-        <div class="col mh-100 overflow-auto py-2">
-            {%include "app/keys.html"%}
+  <div class="row flex-grow-1 overflow-hidden">
+    <div class="col mh-100 overflow-auto py-2">
+      <div class="container">
+        <div class="row pb-3">
+          <div class="col">
+            <h3>My Keys</h3>
+          </div>
+          <div class="col">
+            <a class="btn btn-success" href="#" onclick="makeKey()">
+              <svg class="bi bi-plus-circle" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 3.5a.5.5 0 01.5.5v4a.5.5 0 01-.5.5H4a.5.5 0 010-1h3.5V4a.5.5 0 01.5-.5z"
+                  clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M7.5 8a.5.5 0 01.5-.5h4a.5.5 0 010 1H8.5V12a.5.5 0 01-1 0V8z"
+                  clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M8 15A7 7 0 108 1a7 7 0 000 14zm0 1A8 8 0 108 0a8 8 0 000 16z"
+                  clip-rule="evenodd" />
+              </svg>
+              Create New KeyPair</a>
+          </div>
+          <div class="col">
+            <button type="button" class="btn btn-primary btn-dark" data-toggle="modal" data-target="#signModal">
+              <svg class="bi bi-pencil-square" width="1em" height="1em" viewBox="0 0 16 16"
+                fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M15.502 1.94a.5.5 0 010 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 01.707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 00-.121.196l-.805 2.414a.25.25 0 00.316.316l2.414-.805a.5.5 0 00.196-.12l6.813-6.814z" />
+                <path fill-rule="evenodd"
+                  d="M1 13.5A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-6a.5.5 0 00-1 0v6a.5.5 0 01-.5.5h-11a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5H9a.5.5 0 000-1H2.5A1.5 1.5 0 001 2.5v11z"
+                  clip-rule="evenodd" />
+              </svg>
+              Sign File
+            </button>
+          </div>
         </div>
-        <div class='col mh-100 overflow-auto'>
-            <div class='row flex-shrink-0'>
-                <div class="col mh-100 overflow-auto py-2">
-                    {%include "app/key_store.html"%}
-                </div>
-            </div>
+        <div class="row">
+          <div class="col">
+            <table class="table table-dark">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                </tr>
+              </thead>
+              <tbody id="key-table-body">
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
+    <div class='col mh-100 overflow-auto'>
+      <div class='row flex-shrink-0'>
+        <div class="col mh-100 overflow-auto py-2">
+          <div class="container">
+            {%include "app/key_store_card.html"%}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script src="{%static "scripts/key_store.js" %}"></script>
+
+<script>
+function getCookie(name) {
+  var value = "; " + document.cookie;
+  var parts = value.split("; " + name + "=");
+  if (parts.length == 2) return parts.pop().split(";").shift();
+}
+
+var getKeys = function () {
+  $('#key-table-body').empty();
+  $.ajax({
+    url: '/api/keys/',
+    dataType: 'json',
+    success: function (data) {
+      $.each(data, function (index) {
+        var id = data[index]['secure_id'];
+        var pk = data[index]['id'];
+        var key = data[index]['key_from_bytes'];
+        $('#key-table-body').append(`
+      <tr>
+        <td>${id}</td>
+        <td>
+        <a  class="btn btn-light"
+          href="/api/keys/${id}/get_private_key_as_file/"
+          onclick="alert('Never share your private key with anyone.')">
+          Private Key
+          <svg class="bi bi-download" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+              d="M.5 8a.5.5 0 01.5.5V12a1 1 0 001 1h12a1 1 0 001-1V8.5a.5.5 0 011 0V12a2 2 0 01-2 2H2a2 2 0 01-2-2V8.5A.5.5 0 01.5 8z"
+              clip-rule="evenodd" />
+            <path fill-rule="evenodd"
+              d="M5 7.5a.5.5 0 01.707 0L8 9.793 10.293 7.5a.5.5 0 11.707.707l-2.646 2.647a.5.5 0 01-.708 0L5 8.207A.5.5 0 015 7.5z"
+              clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M8 1a.5.5 0 01.5.5v8a.5.5 0 01-1 0v-8A.5.5 0 018 1z"
+              clip-rule="evenodd" />
+          </svg>
+        </a>
+        </td>
+        <td>
+        <a class="btn btn-light" href="/api/keys/${id}/get_public_key_as_file/">
+          Public Key
+          <svg class="bi bi-download" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+              d="M.5 8a.5.5 0 01.5.5V12a1 1 0 001 1h12a1 1 0 001-1V8.5a.5.5 0 011 0V12a2 2 0 01-2 2H2a2 2 0 01-2-2V8.5A.5.5 0 01.5 8z"
+              clip-rule="evenodd" />
+            <path fill-rule="evenodd"
+              d="M5 7.5a.5.5 0 01.707 0L8 9.793 10.293 7.5a.5.5 0 11.707.707l-2.646 2.647a.5.5 0 01-.708 0L5 8.207A.5.5 0 015 7.5z"
+              clip-rule="evenodd" />
+            <path fill-rule="evenodd" d="M8 1a.5.5 0 01.5.5v8a.5.5 0 01-1 0v-8A.5.5 0 018 1z"
+              clip-rule="evenodd" />
+          </svg>
+        </a>
+        </td>
+        <td>
+        <div class="btn-group" data-toggle="buttons" onclick="setKey('signing', '${id}');">
+          <label class="btn btn-light">
+          <input type="radio" name="signing" pk="${id}" id="signing-${id}"/>Signing Key
+          </label>
+        </div>
+        </td>
+        <td>
+        <div class="btn-group" data-toggle="buttons" onclick="setKey('messaging', '${id}');">
+          <label class="btn btn-light">
+          <input type="radio" name="messaging" pk="${id}" id="encryption-${id}"/>Encryption Key
+          </label>
+        </div>
+        </td>
+        <td>
+        <a class="btn btn-danger" href="#" onclick="destroyKey('${id}')">Delete</a>
+        </td>
+      </tr>
+      `);
+      });
+      setChecks();
+    }
+  });
+};
+
+var setChecks = function () {
+  $.ajax({
+    url: '/api/user-keys/{{request.user.id}}/',
+    beforeSend(xhr, settings) {
+      xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+    },
+  }).done(function (data) {
+    var s_pk = data['signing_key'];
+    var m_pk = data['messaging_key'];
+    $('#key-table-body').find('td div label input').each(function (index, element) {
+      if ($(element).attr('pk') == s_pk && $(element).attr('name') == 'signing') {
+        $(element).attr('checked', 'checked');
+      }
+      if ($(element).attr('pk') == m_pk && $(element).attr('name') == 'messaging') {
+        $(element).attr('checked', 'checked');
+      }
+    });
+  });
+}
+
+var makeKey = function () {
+  $.ajax({
+    url: '/api/keys/',
+    method: 'POST',
+    beforeSend(xhr, settings) {
+      xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+    },
+    success: function () {
+      getKeys();
+    }
+  });
+};
+
+var destroyKey = function (key_id) {
+  if (confirm("Are you sure?")) {
+    $.ajax({
+      url: '/api/keys/' + key_id + '/',
+      method: 'DELETE',
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+      success: function () {
+        getKeys();
+      }
+    });
+  }
+};
+
+var setKey = function (type, key_id) {
+  var name = type + '_key';
+  var data = {};
+  data[name] = key_id;
+  json_data = JSON.stringify(data);
+  $.ajax({
+    url: '/api/user-keys/{{request.user.id}}/',
+    method: 'PUT',
+    dataType: 'json',
+    contentType: 'application/json',
+    data: json_data,
+    beforeSend(xhr, settings) {
+      xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+    },
+    success: function () {
+      getKeys();
+    }
+  });
+};
+
+$(document).ready(function () {
+
+  getKeys();
+  setChecks();
+
+  $("#key-table-body").on('click', ':button', function () {
+    var id = $(this).attr('id');
+    var type = $(this).attr('keytype');
+    $.ajax({
+      url: '/api/keys/' + id + '/get_' + type + '_key_as_file/',
+      method: 'POST',
+      dataType: 'octet-stream',
+      beforeSend(xhr, settings) {
+        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+      },
+      success: function (data) {
+        console.log(data);
+      }
+    })
+  });
+});
+</script>
+
+<!-- App modals -->
+
+{%include "modals/decrypt.html"%}
+{%include "modals/encrypt.html"%}
+{%include "modals/check_sign.html"%}
+{%include "modals/sign.html"%}
+{%include "modals/hash.html"%}
+
+<!-- ########## -->
 
 {%endblock%}
