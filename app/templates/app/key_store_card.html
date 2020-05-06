@@ -13,6 +13,14 @@
               <label for="usernames">Type a Username: </label>
               <input id="usernames">
             </div>
+            <div class="ui-widget my-1">
+              <form action="/api/hash/" method="post">
+                {% csrf_token %}
+                <label for="hashgen">Hash message: </label>
+                <textarea name="content" id="hashgen"></textarea>
+                <button type="submit" class="btn btn-dark">Generate Hash</button>
+              </form>
+            </div>
           </div>
           <div class="col">
             <a class="btn btn-light my-1" id="download-m-key" href="/api/keys/${msg_key_id}/get_public_key_as_file/">
