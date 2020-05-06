@@ -53,10 +53,17 @@ var setKeys = function (m, s) {
 };
 
 $(document).ready(function () {
+  // initialize all the hidden input fields
+  setKeys('', '');
+
   // empty the currently-selected user
   $("#currently-selected-user").val('');
 
   // disable downloading keys until user is specified
   $('#download-m-key').addClass('disabled');
   $('#download-s-key').addClass('disabled');
+  $('#encrypt-msg').prop('disabled', true);
+  $('#decrypt-msg').prop('disabled', true);
+  $('#sign-file').prop('disabled', true);
+  $('#check-sig').prop('disabled', true);
 })
