@@ -227,7 +227,7 @@ class PrivateKeyViewset(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def get_public_key(self, request, secure_id=None):
         private_key = get_object_or_404(PrivateKey, secure_id=secure_id)
-        return JsonResponse({'key': private_key.get_public_key().decode('utf-8')})
+        return JsonResponse({'key': private_key.get_public_key()})
 
     @action(detail=True, methods=['get'])
     def get_public_key_as_file(self, request, secure_id=None):
@@ -382,6 +382,6 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
             is_sig_valid = 'No signature'
 
         return JsonResponse({
-            'Decrypted_message': data.decode("utf-8"),
+            'Decrypted_message': data,
             'Signature status': is_sig_valid
         })
