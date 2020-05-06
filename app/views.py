@@ -382,6 +382,6 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
             is_sig_valid = 'No signature'
 
         return JsonResponse({
-            'Decrypted_message': data,
+            'Decrypted_message': data.decode('utf-8'),
             'Signature status': is_sig_valid
         })
