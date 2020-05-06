@@ -125,7 +125,7 @@ class PrivateKeySerializer(serializers.ModelSerializer):
 
     # attribute method
     def get_key_from_bytes(self, obj):
-        return obj.content.decode("utf-8")
+        return obj.content
 
     # generate a private key with RSA module
     def private_gen(self):
