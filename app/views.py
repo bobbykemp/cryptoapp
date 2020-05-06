@@ -39,6 +39,11 @@ class CreateUserView(FormView):
     form_class = UserCreationForm
     success_url = '/'
 
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        print(form)
+        return JsonResponse(form.errors, status=400)
+
     def form_valid(self, form):
         print('test')
         form.save()

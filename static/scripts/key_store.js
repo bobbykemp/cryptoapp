@@ -31,11 +31,13 @@ $(function () {
       setKeys(ui.item.messaging_key, ui.item.signing_key);
       if (ui.item.messaging_key) {
         $('#download-m-key').removeClass('disabled');
+        $('#encrypt-msg').prop('disabled', false);
       } else {
         $('#download-m-key').addClass('disabled');
       }
       if (ui.item.signing_key) {
         $('#download-s-key').removeClass('disabled');
+        $('#check-sig').prop('disabled', false);
       } else {
         $('#download-s-key').addClass('disabled');
       }
@@ -44,26 +46,3 @@ $(function () {
   });
 });
 
-var setKeys = function (m, s) {
-  $("#sign-key-verif").val(s);
-  $("#sign-key-id").val(s);
-  $("#recip-key-id").val(m);
-  $('#download-m-key').attr('href', '/api/keys/' + m + '/get_public_key_as_file/')
-  $('#download-s-key').attr('href', '/api/keys/' + s + '/get_public_key_as_file/')
-};
-
-$(document).ready(function () {
-  // initialize all the hidden input fields
-  setKeys('', '');
-
-  // empty the currently-selected user
-  $("#currently-selected-user").val('');
-
-  // disable downloading keys until user is specified
-  $('#download-m-key').addClass('disabled');
-  $('#download-s-key').addClass('disabled');
-  $('#encrypt-msg').prop('disabled', true);
-  $('#decrypt-msg').prop('disabled', true);
-  $('#sign-file').prop('disabled', true);
-  $('#check-sig').prop('disabled', true);
-})

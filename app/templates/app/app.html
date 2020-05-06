@@ -50,11 +50,6 @@
 <script src="{%static "scripts/key_store.js" %}"></script>
 
 <script>
-  function getCookie(name) {
-    var value = "; " + document.cookie;
-    var parts = value.split("; " + name + "=");
-    if (parts.length == 2) return parts.pop().split(";").shift();
-  }
 
   var getKeys = function () {
     $('#key-table-body').empty();
@@ -131,18 +126,19 @@
   var setChecks = function () {
     $.ajax({
       url: '/api/user-keys/{{request.user.id}}/',
-      beforeSend(xhr, settings) {
-        xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
-      },
     }).done(function (data) {
+      $('#sign-file').prop('disabled', true);
+      $('#decrypt-msg').prop('disabled', true);
       var s_pk = data['signing_key'];
       var m_pk = data['messaging_key'];
       $('#key-table-body').find('td div label input').each(function (index, element) {
         if ($(element).attr('pk') == s_pk && $(element).attr('name') == 'signing') {
           $(element).attr('checked', 'checked');
+          $('#sign-file').prop('disabled', false);
         }
         if ($(element).attr('pk') == m_pk && $(element).attr('name') == 'messaging') {
           $(element).attr('checked', 'checked');
+          $('#decrypt-msg').prop('disabled', false);
         }
       });
     });
@@ -196,6 +192,14 @@
     });
   };
 
+  var setKeys = function (m, s) {
+    $("#sign-key-verif").val(s);
+    $("#sign-key-id").val(s);
+    $("#recip-key-id").val(m);
+    $('#download-m-key').attr('href', '/api/keys/' + m + '/get_public_key_as_file/')
+    $('#download-s-key').attr('href', '/api/keys/' + s + '/get_public_key_as_file/')
+  };
+
   $(document).ready(function () {
 
     getKeys();
@@ -210,12 +214,22 @@
         dataType: 'octet-stream',
         beforeSend(xhr, settings) {
           xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
-        },
-        success: function (data) {
-          console.log(data);
         }
       })
     });
+
+    // initialize all the hidden input fields
+    setKeys('', '');
+
+    // empty the currently-selected user
+    $("#currently-selected-user").val('');
+
+    // disable downloading keys until user is specified
+    $('#download-m-key').addClass('disabled');
+    $('#download-s-key').addClass('disabled');
+    $('#encrypt-msg').prop('disabled', true);
+    $('#check-sig').prop('disabled', true);
+    
   });
 </script>
 
