@@ -35,5 +35,5 @@ urlpatterns = [
     path('signup/',         CreateUserView.as_view()),
     path('rsa/',            login_required(TemplateView.as_view(template_name="app/rsa.html"))),
     path('app/',            login_required(TemplateView.as_view(template_name="app/app.html"))),
-    path('',                TemplateView.as_view(template_name="app/base.html")),
+    path('',                TemplateView.as_view(template_name="app/landing.html")),
 ]

@@ -369,7 +369,12 @@ class MessageViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Decrypt the data with the AES session key
         cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-        data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        try:
+            data = cipher_aes.decrypt_and_verify(ciphertext, tag)
+        except ValueError:
+            return JsonResponse({
+                'error': 'Signature verification failed. Try again, checking \'Is Message Signed?\''
+            })
 
         if signed:
             is_sig_valid = verify_signature(request, data, signature)

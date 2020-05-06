@@ -1,0 +1,40 @@
+{% extends "app/base.html" %} {% block content %}
+{%load static%}
+
+<div class="container">
+  <div class="row py-2">
+    <div class="d-flex col justify-content-center">
+      <h3>Welcome to FancyDragon</h3>
+    </div>
+  </div>
+  <div class="row py-2">
+    <div class="d-flex col justify-content-center">
+      <img class="mx-2" src="{%static "fancy_dragon.png" %}" alt="">
+    </div>
+  </div>
+  <div class="row py-2">
+    <div class="d-flex col justify-content-center">
+      <p>
+        FancyDragon is a very simple 'key manager' service. Create an account, create key pairs,
+        and encrypt and decrypt utf-8 encoded textual messages to and from other users of the app.
+        You can also sign files, verify file signatures from others, and generate hashes
+        of utf-8 textual messages.
+        <br><br>
+        This application was developed for Dr. Levine's CSE 4381 Cryptography Class in Spring of 2020.
+        <br><br>
+        Please watch the demo video below to see how to use this application.
+        <br><br>
+      </p>
+    </div>
+  </div>
+  <div class="row py-2">
+    <div class="d-flex col justify-content-center">
+      <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+{%endblock%}
