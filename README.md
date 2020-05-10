@@ -3,7 +3,7 @@
 ![One Fancy Dragon](static/fancy_dragon.png)
 
 ## About:
-[FancyDragon](fancydragon.herokuapp.com) is a very simple 'key manager' service. Create an account, create key pairs, and encrypt and decrypt utf-8 encoded textual messages to and from other users of the app. You can also sign files, verify file signatures from others, and generate hashes of utf-8 textual messages.
+[FancyDragon](https://fancydragon.herokuapp.com) is a very simple 'key manager' service. Create an account, create key pairs, and encrypt and decrypt utf-8 encoded textual messages to and from other users of the app. You can also sign files, verify file signatures from others, and generate hashes of utf-8 textual messages.
 
 This application was developed for Dr. Levine's CSE 4381 Cryptography Class in Spring of 2020.
 
