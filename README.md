@@ -18,6 +18,7 @@
 ---
 ### Frontend:
 - Aside from HTML, CSS and vanilla JS, [jQuery](https://jquery.com/) was also used
-
+---
 ### Hosting:
 - [Heroku](https://www.heroku.com/about)
+---
