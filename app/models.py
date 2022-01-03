@@ -2,7 +2,6 @@ from django.db import models
 from django.forms import ModelForm
 from django.contrib.auth.models import User
 from Crypto.PublicKey import RSA
-import uuid
 
 
 class PrivateKey(models.Model):

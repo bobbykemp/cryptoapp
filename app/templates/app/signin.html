@@ -15,27 +15,14 @@
           <form class="form-container" method="post" action="/api_auth/login/">
             {% csrf_token %}
             <div class="form-group">
-              <label for="Input">Email address</label>
-              <input
-                class="form-control textinput textInput"
-                id="id_username"
-                aria-describedby="emailHelp"
-                placeholder="Enter email"
-                name="username"
-              />
-              <small id="emailHelp" class="form-text text-muted"
-                >We'll never share your email with anyone else.
-              </small>
+              <label for="Input">User Name</label>
+              <input class="form-control textinput textInput" id="id_username" placeholder="Enter user name"
+                name="username" />
             </div>
             <div class="form-group">
               <label for="Password">Password</label>
-              <input
-                type="password"
-                class="form-control textinput textInput"
-                id="id_password"
-                placeholder="Password"
-                name="password"
-              />
+              <input type="password" class="form-control textinput textInput" id="id_password" placeholder="Password"
+                name="password" />
             </div>
 
             <button type="submit" class="btn btn-primary btn-block">
