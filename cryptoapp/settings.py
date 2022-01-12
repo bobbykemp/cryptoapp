@@ -26,7 +26,7 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "fancydragon.rkemp.com",
+    "fancydragon.rjkemp.com",
     "fancydragon.herokuapp.com",
 ]
 

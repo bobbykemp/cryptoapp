@@ -23,7 +23,6 @@ pylint-plugin-utils==0.6
 pyOpenSSL==19.1.0
 python-decouple==3.5
 python-gnupg==0.4.5
-python-ldap==3.4.0
 pytz==2019.3
 six==1.14.0
 sqlparse==0.3.1

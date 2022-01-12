@@ -5,32 +5,34 @@
   <div class="row py-2">
     <div class="d-flex col justify-content-center">
       <h3>Welcome to FancyDragon</h3>
+      <img class="mx-2" src="{%static "fancy_dragon.png" %}" alt="logo">
     </div>
   </div>
   <div class="row py-2">
     <div class="d-flex col justify-content-center">
-      <img class="mx-2" src="{%static "fancy_dragon.png" %}" alt="">
+      <div class="card">
+        <div class="embed-responsive embed-responsive-16by9">
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/a8u4iPg_TqU" frameborder="0"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="card-body">
+        <h4 class="card-title">Overview</h4>
+        <p class="card-text">
+          FancyDragon is a very simple 'key manager' service. Create an account, create key pairs,
+          and encrypt and decrypt UTF-8 encoded textual messages to and from other users of the app.
+          You can also sign files, verify file signatures from others, and generate hashes
+          of UTF-8 textual messages.
+        </p>
+        <p class="card-text">
+          This application was originally developed for Dr. Levine's CSE 4381 Cryptography Class in Spring of 2020.
+        </p>
+      </div>
     </div>
-  </div>
-  <div class="row py-2">
-    <div class="d-flex col justify-content-center">
-      <p>
-        FancyDragon is a very simple 'key manager' service. Create an account, create key pairs,
-        and encrypt and decrypt utf-8 encoded textual messages to and from other users of the app.
-        You can also sign files, verify file signatures from others, and generate hashes
-        of utf-8 textual messages.
-        <br><br>
-        This application was developed for Dr. Levine's CSE 4381 Cryptography Class in Spring of 2020.
-        <br><br>
-        Please watch the demo video below to see how to use this application.
-        <br><br>
-      </p>
-    </div>
-  </div>
-  <div class="row py-2">
-    <div class="d-flex col justify-content-center">
-      <div class="embed-responsive embed-responsive-16by9">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/a8u4iPg_TqU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div class="d-flex col-3 justify-content-center">
+      <div class="card">
+        <div class="card-body">
+          Please watch the demo video to get an overview of the app's features.
+        </div>
       </div>
     </div>
   </div>
